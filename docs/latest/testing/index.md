@@ -1,232 +1,96 @@
 ---
 description: |
-  Add a global app wrapper to provide common meta tags or context for application routes.
+  Learn how to test Fresh applications including middlewares, routes, handlers, and islands.
 ---
+
+# Testing Fresh Applications
 
 To ensure that your application works as expected we can write tests. Any aspect
 of Fresh can be tested as a whole together or in isolation. We use Deno's
 built-in [test runner](https://docs.deno.com/runtime/fundamentals/testing/) to
 write tests.
 
-## Testing middlewares
+Fresh provides flexible testing patterns that allow you to test different parts
+of your application in isolation or as integrated units. The main approach uses
+the Fresh [`App`](/docs/concepts/app) class to create testable instances of your
+application components.
 
-To test [middlewares](/docs/concepts/middleware) we're going to create a dummy
-app and return the relevant info we want to check in a custom `/` handler.
+## What You Can Test
 
-```ts middleware.test.ts
+- **[Middlewares](./middlewares)** - Test middleware logic, state management,
+  and request/response transformations
+- **[App Wrappers and Layouts](./layouts)** - Test your application's HTML
+  structure and layout components
+- **[Routes and Handlers](./routes)** - Test route logic, API endpoints, and
+  request handling
+- **[Islands](./islands)** - Test both server-side rendering and client-side
+  interactivity
+
+## Getting Started
+
+All tests use the same basic pattern with the Fresh `App` class:
+
+```ts tests/basic-test.test.ts
 import { expect } from "@std/expect";
 import { App } from "fresh";
 
-const middleware = define.middleware((ctx) => {
-  ctx.state.text = "middleware text";
-  return ctx.next();
-});
-
-Deno.test("My middleware - sets ctx.state.text", async () => {
+Deno.test("Basic Fresh test", async () => {
   const handler = new App()
-    .use(middleware)
-    .get("/", (ctx) => new Response(ctx.state.text))
+    .get("/", () => new Response("Hello World"))
     .handler();
 
   const res = await handler(new Request("http://localhost"));
   const text = await res.text();
 
-  expect(text).toEqual("middleware text");
+  expect(text).toEqual("Hello World");
 });
 ```
 
-You can extend this pattern for other middlewares. When you have a middleware
-that adds a header to the returned response, you can assert against that too.
+This pattern allows you to create isolated test environments without needing to
+start a full server or build process.
 
-## Testing app wrapper or layouts
+## Test Organization
 
-Both the [app wrapper](/docs/advanced/app-wrapper) component and
-[layouts](/docs/advanced/layouts) can be tested in the same way.
+We recommend organizing your tests in a dedicated `tests/` folder to keep them
+separate from your application code and avoid potential conflicts with Fresh's
+file-based routing:
 
-```tsx routes/_app.test.tsx
-import { expect } from "@std/expect";
-import { App } from "fresh";
-
-function AppWrapper({ Component }) {
-  return (
-    <html lang="en">
-      <head>
-        <meta charset="utf-8" />
-        <title>My App</title>
-      </head>
-      <body>
-        <Component />
-      </body>
-    </html>
-  );
-}
-
-Deno.test("App Wrapper - renders title and content", async () => {
-  const handler = new App()
-    .appWrapper(AppWrapper)
-    .get("/", (ctx) => ctx.render(<h1>hello</h1>))
-    .handler();
-
-  const res = await handler(new Request("http://localhost"));
-  const text = await res.text();
-
-  expect(text).toContain("My App");
-  expect(text).toContain("Hello");
-});
+```
+tests/
+  middleware/
+    auth.test.ts
+  routes/
+    index.test.ts
+    api/
+      users.test.ts
+  islands/
+    Counter.test.tsx
+  layouts/
+    MainLayout.test.tsx
 ```
 
-Same can be done for layouts.
+## Running Tests
 
-```tsx routes/_layout.test.tsx
-import { expect } from "@std/expect";
-import { App } from "fresh";
+Use Deno's built-in test runner to execute your tests:
 
-function MyLayout({ Component }) {
-  return (
-    <div>
-      <h1>My Layout</h1>
-      <Component />
-    </div>
-  );
-}
+```bash
+# Run all tests
+deno test
 
-Deno.test("MyLayout - renders heading and content", async () => {
-  const handler = new App()
-    .layout("*", MyLayout)
-    .get("/", (ctx) => ctx.render(<h1>hello</h1>))
-    .handler();
+# Run specific test files
+deno test tests/routes/api/users.test.ts
 
-  const res = await handler(new Request("http://localhost"));
-  const text = await res.text();
-
-  expect(text).toContain("My Layout");
-  expect(text).toContain("Hello");
-});
+# Run tests with watch mode
+deno test --watch
 ```
 
-## Testing routes and handlers
+## Next Steps
 
-For testing your route handlers and business logic, you can use the same
-[`App`](/docs/concepts/app) pattern shown above. Fresh 2.0 makes it easy to test
-individual routes without needing a full build process:
-
-```ts my-routes.test.ts
-import { expect } from "@std/expect";
-import { App } from "fresh";
-
-// Import your route handlers
-import { handler as indexHandler } from "./routes/index.ts";
-import { handler as apiHandler } from "./routes/api/users.ts";
-
-Deno.test("Index route returns homepage", async () => {
-  const app = new App().get("/", indexHandler);
-  const handler = app.handler();
-
-  const response = await handler(new Request("http://localhost/"));
-  const text = await response.text();
-
-  expect(text).toContain("Welcome");
-});
-
-Deno.test("API route returns JSON", async () => {
-  const app = new App().get("/api/users", apiHandler);
-  const handler = app.handler();
-
-  const response = await handler(new Request("http://localhost/api/users"));
-  const json = await response.json();
-
-  expect(json).toEqual({ users: [] });
-});
-```
-
-## Testing islands
-
-Testing islands requires different approaches for server-side and client-side
-behavior:
-
-### Server-side rendering of islands
-
-You can test that your islands render correctly on the server using the same
-[`App`](/docs/concepts/app) pattern. Note: this requires a `.tsx` file extension
-to use JSX:
-
-```tsx island-ssr.test.tsx
-import { expect } from "@std/expect";
-import { App } from "fresh";
-import Counter from "./islands/Counter.tsx";
-
-Deno.test("Counter page renders island", async () => {
-  const app = new App().get("/counter", (ctx) => {
-    return ctx.render(
-      <div className="p-8">
-        <h1>Counter Test Page</h1>
-        <Counter />
-      </div>,
-    );
-  });
-  const handler = app.handler();
-
-  const response = await handler(new Request("http://localhost/counter"));
-  const html = await response.text();
-
-  // Verify the island's initial HTML is present
-  expect(html).toContain('class="counter"');
-  expect(html).toContain("count: 0");
-});
-```
-
-### Client-side island interactivity
-
-For testing client-side island behavior (clicks, state changes, etc.), you need
-a full build and browser environment. You can use the approach similar to
-Fresh's own tests:
-
-```tsx island-client.test.tsx
-import { expect } from "@std/expect";
-import { createBuilder } from "vite";
-import * as path from "@std/path";
-
-// Create a production build
-const builder = await createBuilder({
-  logLevel: "error",
-  root: "./",
-  build: { emptyOutDir: true },
-  environments: {
-    ssr: { build: { outDir: path.join("_fresh", "server") } },
-    client: { build: { outDir: path.join("_fresh", "client") } },
-  },
-});
-await builder.buildApp();
-
-const app = await import("./_fresh/server.js");
-
-Deno.test("Counter island renders correctly", async () => {
-  // Start production server
-  const server = Deno.serve({
-    port: 0,
-    handler: app.default.fetch,
-  });
-
-  const { port } = server.addr as Deno.NetAddr;
-  const address = `http://localhost:${port}`;
-
-  try {
-    // Basic smoke test: verify the island HTML is served
-    const response = await fetch(`${address}/counter`);
-    const html = await response.text();
-
-    expect(html).toContain('class="counter"');
-    expect(html).toContain("count: 0");
-
-    // For full browser interactivity testing, you would need:
-    // - Browser automation tools (Puppeteer, Playwright)
-    // - withBrowser utility from Fresh's test suite
-  } finally {
-    await server.shutdown();
-  }
-});
-```
-
-**Note:** For most applications, testing the server-side rendering is
-sufficient. Only test client-side interactivity if you have complex island logic
-that needs verification.
+- **[Testing Middlewares](./middlewares)** - Learn how to test middleware
+  functions and their effects on requests and responses
+- **[Testing Layouts](./layouts)** - Learn how to test app wrappers and layout
+  components
+- **[Testing Routes](./routes)** - Learn how to test route handlers, API
+  endpoints, and request processing
+- **[Testing Islands](./islands)** - Learn how to test both server-side
+  rendering and client-side behavior of islands

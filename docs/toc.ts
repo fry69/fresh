@@ -75,6 +75,12 @@ const toc: RawTableOfContents = {
       testing: {
         title: "Testing",
         link: "latest",
+        pages: [
+          ["middlewares", "Testing Middlewares", "link:latest"],
+          ["layouts", "Testing Layouts", "link:latest"],
+          ["routes", "Testing Routes", "link:latest"],
+          ["islands", "Testing Islands", "link:latest"],
+        ],
       },
       plugins: {
         title: "Plugins",
