@@ -37,8 +37,8 @@ function stubLogs() {
 }
 
 function withTmpDir(): Promise<{ dir: string } & AsyncDisposable> {
-  const dir = path.join(import.meta.dirname!, "..", "..", "..", "..");
-  return withTmpDirBase({ dir, prefix: "tmp_" });
+  // Use system temp directory instead of project root
+  return withTmpDirBase({ prefix: "fresh_init_test_" });
 }
 
 async function patchProject(dir: string): Promise<void> {
