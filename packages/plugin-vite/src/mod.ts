@@ -161,6 +161,32 @@ export function fresh(config?: FreshViteConfig): Plugin[] {
         // Run update check in background
         updateCheck(UPDATE_INTERVAL).catch(() => {});
 
+        if (vConfig.command === "serve") {
+          // Add node_modules to fs.allow to allow Vite to serve files from there
+          try {
+            const nodeModulesDir = path.join(vConfig.root, "node_modules");
+            await Deno.lstat(nodeModulesDir);
+            vConfig.server.fs.allow.push(nodeModulesDir);
+          } catch (err) {
+            if (!(err instanceof Deno.errors.NotFound)) {
+              throw err;
+            }
+          }
+
+          // The `deno.json` file is sometimes used by the Deno LSP which can
+          // cause a race condition where the file is being written to when the
+          // dev server starts. This can cause the server to crash.
+          try {
+            const denoJsonPath = path.join(vConfig.root, "deno.json");
+            await Deno.lstat(denoJsonPath);
+            vConfig.server.fs.allow.push(denoJsonPath);
+          } catch (err) {
+            if (!(err instanceof Deno.errors.NotFound)) {
+              throw err;
+            }
+          }
+        }
+
         fConfig.islandsDir = pathWithRoot(fConfig.islandsDir, vConfig.root);
         fConfig.routeDir = pathWithRoot(fConfig.routeDir, vConfig.root);
 
