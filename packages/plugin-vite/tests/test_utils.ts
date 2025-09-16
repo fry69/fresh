@@ -204,3 +204,24 @@ export async function launchProd(
     fn,
   );
 }
+
+export async function cleanupTmpViteFolders() {
+  // Clean up temporary vite folders
+  const pluginViteDir = path.join(import.meta.dirname!, "..");
+
+  try {
+    for await (const entry of Deno.readDir(pluginViteDir)) {
+      if (entry.isDirectory && entry.name.startsWith("tmp_vite_")) {
+        const tmpPath = path.join(pluginViteDir, entry.name);
+        try {
+          await Deno.remove(tmpPath, { recursive: true });
+        } catch (_error) {
+          // Silently ignore errors during cleanup
+          // Individual test cleanup failures shouldn't break the test suite
+        }
+      }
+    }
+  } catch (_error) {
+    // Silently ignore errors during cleanup directory reading
+  }
+}

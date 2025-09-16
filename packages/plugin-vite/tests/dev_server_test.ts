@@ -6,6 +6,7 @@ import {
   withBrowser,
 } from "../../fresh/tests/test_utils.tsx";
 import {
+  cleanupTmpViteFolders,
   DEMO_DIR,
   FIXTURE_DIR,
   launchDevServer,
@@ -18,6 +19,10 @@ import {
 const tmp = await prepareDevServer(DEMO_DIR);
 const demoServer = await spawnDevServer(tmp.dir, {
   FRESH_PUBLIC_FOO: "foobar",
+});
+
+Deno.test.afterAll(async () => {
+  await cleanupTmpViteFolders();
 });
 
 Deno.test({

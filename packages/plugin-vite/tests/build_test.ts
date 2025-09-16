@@ -6,6 +6,7 @@ import {
 } from "../../fresh/tests/test_utils.tsx";
 import {
   buildVite,
+  cleanupTmpViteFolders,
   DEMO_DIR,
   FIXTURE_DIR,
   launchProd,
@@ -14,6 +15,10 @@ import {
 import * as path from "@std/path";
 
 const viteResult = await buildVite(DEMO_DIR);
+
+Deno.test.afterAll(async () => {
+  await cleanupTmpViteFolders();
+});
 
 Deno.test({
   name: "vite build - launches",
