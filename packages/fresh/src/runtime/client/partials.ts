@@ -1,3 +1,12 @@
+declare global {
+  interface DocumentEventMap {
+    "fresh:before-partial-update": CustomEvent<{
+      update: () => void;
+    }>;
+    "fresh:after-partial-update": CustomEvent<void>;
+  }
+}
+
 import { type ComponentChildren, h } from "preact";
 import {
   CLIENT_NAV_ATTR,
@@ -297,17 +306,37 @@ async function fetchPartials(
   }
 
   maybeUpdateHistory(actualUrl);
-  await applyPartials(res);
+
+  const data = await preparePartials(res);
+
+  const event = new CustomEvent("fresh:before-partial-update", {
+    cancelable: true,
+    detail: {
+      update: () => renderPartials(data),
+    },
+  });
+
+  if (document.dispatchEvent(event)) {
+    renderPartials(data);
+  }
+
+  document.dispatchEvent(new CustomEvent("fresh:after-partial-update"));
 }
 
 interface PartialReviveCtx {
   foundPartials: number;
 }
 
+interface PreparedPartial {
+  doc: Document;
+  allProps: DeserializedProps;
+  url: string;
+}
+
 /**
  * Apply partials from a HTML response
  */
-export async function applyPartials(res: Response): Promise<void> {
+export async function preparePartials(res: Response): Promise<PreparedPartial> {
   const contentType = res.headers.get("Content-Type");
   if (contentType !== "text/html; charset=utf-8") {
     throw new Error(`Unable to process partial response.`);
@@ -337,6 +366,12 @@ export async function applyPartials(res: Response): Promise<void> {
 
     await Promise.all(promises);
   }
+
+  return { doc, allProps, url: res.url };
+}
+
+export function renderPartials(data: PreparedPartial) {
+  const { doc, allProps } = data;
 
   const ctx: PartialReviveCtx = {
     foundPartials: 0,
@@ -413,7 +448,7 @@ export async function applyPartials(res: Response): Promise<void> {
 
   if (ctx.foundPartials === 0) {
     throw new NoPartialsError(
-      `Found no partials in HTML response. Please make sure to render at least one partial. Requested url: ${res.url}`,
+      `Found no partials in HTML response. Please make sure to render at least one partial. Requested url: ${data.url}`,
     );
   }
 }

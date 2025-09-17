@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "jsx": "precompile",
+    "jsxImportSource": "preact"
+  },
+  "imports": {
+    "fresh": "jsr:@fresh/core@^2.0.0",
+    "preact": "npm:preact@^10.27.0",
+    "tailwindcss": "npm:tailwindcss@^4.1.10",
+    "vite": "npm:vite@^7.1.5"
+  }
+}

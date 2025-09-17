@@ -228,3 +228,64 @@ attribute, it will check if any of the ancestor elements has it. If an element
 was found with a truthy `f-client-nav` attribute a partial request will be
 triggered. If there is no such attribute or if it's set to `false`, no partial
 request will occur.
+
+## Lifecycle events
+
+When a partial navigation is triggered, Fresh dispatches two custom events on
+the `document` object that can be used to hook into the lifecycle of the update.
+This is useful for a variety of use cases, like showing a loading indicator or
+animating the content changes.
+
+- `fresh:before-partial-update`: This event is dispatched right before the DOM
+  is updated. It is a cancelable event, and the `detail` property of the event
+  contains an `update` function. You can call `event.preventDefault()` to
+  prevent Fresh from automatically updating the DOM, and then call the
+  `update()` function yourself. This is particularly useful for implementing
+  custom animations with the View Transition API.
+
+- `fresh:after-partial-update`: This event is dispatched immediately after the
+  DOM has been updated.
+
+### Using with the View Transition API
+
+The View Transition API allows you to create smooth transitions between
+different states of your application. You can use the lifecycle events to easily
+integrate View Transitions with Fresh partials.
+
+Here is an example of how to use the `fresh:before-partial-update` event to
+trigger a view transition:
+
+```tsx
+// routes/_app.tsx
+export default function App({ Component }: AppProps) {
+  return (
+    <html>
+      <head>
+        {/* ... */}
+      </head>
+      <body>
+        <Component />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+document.addEventListener("fresh:before-partial-update", (e) => {
+  if (!document.startViewTransition) {
+    return;
+  }
+
+  e.preventDefault();
+  document.startViewTransition(() => e.detail.update());
+});
+`,
+          }}
+        >
+        </script>
+      </body>
+    </html>
+  );
+}
+```
+
+By adding this script to your `_app.tsx`, all partial navigations will be
+wrapped in a view transition. You can then use CSS to define the animations for
+the transition.
