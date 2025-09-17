@@ -1,7 +1,7 @@
 import * as path from "@std/path";
 import { walk } from "@std/fs/walk";
 import { createBuilder } from "vite";
-import { withChildProcessServer } from "../../fresh/src/test_utils.ts";
+import { withChildProcessServer } from "../../fresh/tests/test_utils.tsx";
 
 export const DEMO_DIR = path.join(import.meta.dirname!, "..", "demo");
 export const FIXTURE_DIR = path.join(import.meta.dirname!, "fixtures");
@@ -62,10 +62,12 @@ export async function prepareDevServer(fixtureDir: string) {
 
   await copyDir(fixtureDir, tmpDir);
 
+  const pluginPath = path.fromFileUrl(new URL("../src/mod.ts", import.meta.url));
+
   await Deno.writeTextFile(
     path.join(tmpDir, "vite.config.ts"),
     `import { defineConfig } from "vite";
-import { fresh } from "@fresh/plugin-vite";
+import { fresh } from "${pluginPath}";
 
 export default defineConfig({
   plugins: [
@@ -91,10 +93,10 @@ export async function launchDevServer(
   await withChildProcessServer(
     {
       cwd: dir,
-      args: ["run", "-A", "--cached-only", "npm:vite", "--port", "0"],
+      args: ["run", "-A", "npm:vite", "--port", "0"],
       env,
     },
-    async (address) => await fn(address, dir),
+    async (address: string) => await fn(address, dir),
   );
 }
 
@@ -110,10 +112,10 @@ export async function spawnDevServer(
   const server = withChildProcessServer(
     {
       cwd: dir,
-      args: ["run", "-A", "--cached-only", "npm:vite", "--port", "0"],
+      args: ["run", "-A", "npm:vite", "--port", "0"],
       env,
     },
-    async (address) => {
+    async (address: string) => {
       serverAddress = address;
       boot.resolve();
       await p.promise;
@@ -209,7 +211,7 @@ export async function launchProd(
     {
       cwd: options.cwd,
       args: options.args ??
-        ["serve", "-A", "--cached-only", "--port", "0", "_fresh/server.js"],
+        ["serve", "-A", "--port", "0", "_fresh/server.js"],
     },
     fn,
   );
