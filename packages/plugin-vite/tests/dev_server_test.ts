@@ -8,45 +8,30 @@ import {
 import {
   DEMO_DIR,
   FIXTURE_DIR,
-  launchDevServer,
-  prepareDevServer,
-  spawnDevServer,
   updateFile,
-  withDevServer,
 } from "./test_utils.ts";
+import { testDev, withViteDev } from "./test_dev_utils.ts";
 
-const tmp = await prepareDevServer(DEMO_DIR);
-const demoServer = await spawnDevServer(tmp.dir, {
-  FRESH_PUBLIC_FOO: "foobar",
-});
-
-Deno.test({
-  name: "vite dev - launches",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/tests/it_works`);
+testDev("vite dev - launches", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/tests/it_works`);
     const text = await res.text();
     expect(text).toContain("it works");
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - serves static files",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/test_static/foo.txt`);
+testDev("vite dev - serves static files", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/test_static/foo.txt`);
     const text = await res.text();
     expect(text).toContain("it works");
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - loads islands",
-  fn: async () => {
+testDev("vite dev - loads islands", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
     await withBrowser(async (page) => {
-      await page.goto(`${demoServer.address()}/tests/island_hooks`, {
+      await page.goto(`${address}/tests/island_hooks`, {
         waitUntil: "networkidle2",
       });
       await waitForText(page, "button", "count: 0");
@@ -54,59 +39,40 @@ Deno.test({
       await page.locator("button").click();
       await waitForText(page, "button", "count: 1");
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - starts without static/ dir",
-  fn: async () => {
-    const fixture = path.join(FIXTURE_DIR, "no_static");
-    await withDevServer(fixture, async (address) => {
-      const res = await fetch(`${address}/`);
-      const text = await res.text();
-      expect(text).toContain("ok");
-    });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+testDev("vite dev - starts without static/ dir", async () => {
+  const fixture = path.join(FIXTURE_DIR, "no_static");
+  await withViteDev(fixture, async (address) => {
+    const res = await fetch(`${address}/`);
+    const text = await res.text();
+    expect(text).toContain("ok");
+  });
 });
 
-Deno.test({
-  name: "vite dev - starts without islands/ dir",
-  fn: async () => {
-    const fixture = path.join(FIXTURE_DIR, "no_islands");
-    await withDevServer(fixture, async (address) => {
-      const res = await fetch(`${address}/`);
-      const text = await res.text();
-      expect(text).toContain("ok");
-    });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+testDev("vite dev - starts without islands/ dir", async () => {
+  const fixture = path.join(FIXTURE_DIR, "no_islands");
+  await withViteDev(fixture, async (address) => {
+    const res = await fetch(`${address}/`);
+    const text = await res.text();
+    expect(text).toContain("ok");
+  });
 });
 
-Deno.test({
-  name: "vite dev - starts without routes/ dir",
-  fn: async () => {
-    const fixture = path.join(FIXTURE_DIR, "no_routes");
-    await withDevServer(fixture, async (address) => {
-      const res = await fetch(`${address}/`);
-      const text = await res.text();
-      expect(text).toContain("ok");
-    });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+testDev("vite dev - starts without routes/ dir", async () => {
+  const fixture = path.join(FIXTURE_DIR, "no_routes");
+  await withViteDev(fixture, async (address) => {
+    const res = await fetch(`${address}/`);
+    const text = await res.text();
+    expect(text).toContain("ok");
+  });
 });
 
-Deno.test({
-  name: "vite dev - can apply HMR to islands (hooks)",
-  ignore: true, // Test is very flaky
-  fn: async () => {
+testDev("vite dev - can apply HMR to islands (hooks)", async () => {
+  await withViteDev(DEMO_DIR, async (address, dir) => {
     await withBrowser(async (page) => {
-      await page.goto(`${demoServer.address()}/tests/island_hooks`, {
+      await page.goto(`${address}/tests/island_hooks`, {
         waitUntil: "networkidle2",
       });
       await waitForText(page, "button", "count: 0");
@@ -114,7 +80,7 @@ Deno.test({
       await waitForText(page, "button", "count: 1");
 
       const island = path.join(
-        demoServer.dir,
+        dir,
         "islands",
         "tests",
         "CounterHooks.tsx",
@@ -128,106 +94,76 @@ Deno.test({
       await page.locator("button").click();
       await waitForText(page, "button", "hmr: 2");
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
-});
+  });
+}, true);
 
-Deno.test({
-  name: "vite dev - can import json in npm package",
-  fn: async () => {
+testDev("vite dev - can import json in npm package", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
     await withBrowser(async (page) => {
-      await page.goto(`${demoServer.address()}/tests/mime`, {
+      await page.goto(`${address}/tests/mime`, {
         waitUntil: "networkidle2",
       });
       await page.locator(".ready").wait();
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - inline env vars",
-  fn: async () => {
+testDev("vite dev - inline env vars", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
     await withBrowser(async (page) => {
-      await page.goto(`${demoServer.address()}/tests/env`, {
+      await page.goto(`${address}/tests/env`, {
         waitUntil: "networkidle2",
       });
       await page.locator(".ready").wait();
 
       const res = await page.locator("pre").evaluate((el) =>
-        // deno-lint-ignore no-explicit-any
         (el as any).textContent ?? ""
       );
 
       expect(JSON.parse(res)).toEqual({ deno: "foobar", nodeEnv: "foobar" });
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  }, { FRESH_PUBLIC_FOO: "foobar" });
 });
 
-Deno.test({
-  name: "vite dev - serves imported assets",
-  fn: async () => {
-    // Vite has an internal allowlist that is refreshed when
-    // pathnames are requested. It will discover valid static
-    // files imported in JS once it encounters them. Therefore
-    // we must request the URL that ultimately imports the
-    // asset first for it to work.
-    let res = await fetch(`${demoServer.address()}/tests/assets`);
+testDev("vite dev - serves imported assets", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    let res = await fetch(`${address}/tests/assets`);
     await res.body?.cancel();
 
-    res = await fetch(`${demoServer.address()}/assets/deno-logo.png`);
+    res = await fetch(`${address}/assets/deno-logo.png`);
     expect(res.status).toEqual(200);
     expect(res.headers.get("Content-Type")).toEqual("image/png");
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - tailwind no _app",
-  fn: async () => {
-    const fixture = path.join(FIXTURE_DIR, "tailwind_no_app");
-    await withDevServer(fixture, async (address) => {
-      await withBrowser(async (page) => {
-        await page.goto(`${address}`, {
-          waitUntil: "networkidle2",
-        });
-
-        await page.locator("style[data-vite-dev-id$='style.css']").wait();
-      });
-    });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
-});
-
-Deno.test({
-  name: "vite dev - tailwind _app",
-  fn: async () => {
-    const fixture = path.join(FIXTURE_DIR, "tailwind_app");
-    await withDevServer(fixture, async (address) => {
-      await withBrowser(async (page) => {
-        await page.goto(`${address}`, {
-          waitUntil: "networkidle2",
-        });
-
-        await page.locator("style[data-vite-dev-id$='style.css']").wait();
-      });
-    });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
-});
-
-Deno.test({
-  name: "vite dev - partial island",
-  fn: async () => {
+testDev("vite dev - tailwind no _app", async () => {
+  const fixture = path.join(FIXTURE_DIR, "tailwind_no_app");
+  await withViteDev(fixture, async (address) => {
     await withBrowser(async (page) => {
-      await page.goto(`${demoServer.address()}/tests/partial`, {
+      await page.goto(`${address}`, {
+        waitUntil: "networkidle2",
+      });
+      await page.locator("style[data-vite-dev-id$='style.css']").wait();
+    });
+  });
+});
+
+testDev("vite dev - tailwind _app", async () => {
+  const fixture = path.join(FIXTURE_DIR, "tailwind_app");
+  await withViteDev(fixture, async (address) => {
+    await withBrowser(async (page) => {
+      await page.goto(`${address}`, {
+        waitUntil: "networkidle2",
+      });
+      await page.locator("style[data-vite-dev-id$='style.css']").wait();
+    });
+  });
+});
+
+testDev("vite dev - partial island", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    await withBrowser(async (page) => {
+      await page.goto(`${address}/tests/partial`, {
         waitUntil: "networkidle2",
       });
 
@@ -238,214 +174,162 @@ Deno.test({
       await page.locator(".counter-hooks button").click();
       await waitForText(page, ".counter-hooks button", "count: 1");
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - json from jsr dependency",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/tests/dep_json`);
+testDev("vite dev - json from jsr dependency", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/tests/dep_json`);
     const json = await res.json();
     expect(json.name).toEqual("@marvinh-test/import-json");
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - import node:*",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/tests/feed`);
+testDev("vite dev - import node:*", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/tests/feed`);
     await res.body?.cancel();
     expect(res.status).toEqual(200);
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - css modules",
-  fn: async () => {
+testDev("vite dev - css modules", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
     await withBrowser(async (page) => {
-      await page.goto(`${demoServer.address()}/tests/css_modules`, {
+      await page.goto(`${address}/tests/css_modules`, {
         waitUntil: "networkidle2",
       });
 
       await waitFor(async () => {
         let color = await page
           .locator(".red > h1")
-          // deno-lint-ignore no-explicit-any
           .evaluate((el) => window.getComputedStyle(el as any).color);
         expect(color).toEqual("rgb(255, 0, 0)");
 
         color = await page
           .locator(".green > h1")
-          // deno-lint-ignore no-explicit-any
           .evaluate((el) => window.getComputedStyle(el as any).color);
         expect(color).toEqual("rgb(0, 128, 0)");
 
         color = await page
           .locator(".blue > h1")
-          // deno-lint-ignore no-explicit-any
           .evaluate((el) => window.getComputedStyle(el as any).color);
         expect(color).toEqual("rgb(0, 0, 255)");
 
-        // Route css
         color = await page
           .locator(".route > h1")
-          // deno-lint-ignore no-explicit-any
           .evaluate((el) => window.getComputedStyle(el as any).color);
         expect(color).toEqual("rgb(255, 218, 185)");
         return true;
       });
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - route css import",
-  fn: async () => {
+testDev("vite dev - route css import", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
     await withBrowser(async (page) => {
-      await page.goto(`${demoServer.address()}/tests/css`, {
+      await page.goto(`${address}/tests/css`, {
         waitUntil: "networkidle2",
       });
 
       await waitFor(async () => {
         const color = await page
           .locator("h1")
-          // deno-lint-ignore no-explicit-any
           .evaluate((el) => window.getComputedStyle(el as any).color);
         expect(color).toEqual("rgb(255, 0, 0)");
         return true;
       });
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - nested islands",
-  fn: async () => {
+testDev("vite dev - nested islands", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
     await withBrowser(async (page) => {
-      await page.goto(`${demoServer.address()}/tests/island_nested`, {
+      await page.goto(`${address}/tests/island_nested`, {
         waitUntil: "networkidle2",
       });
 
       await page.locator(".outer-ready").wait();
       await page.locator(".inner-ready").wait();
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - remote island",
-  fn: async () => {
-    const fixture = path.join(FIXTURE_DIR, "remote_island");
-    await launchDevServer(fixture, async (address) => {
-      await withBrowser(async (page) => {
-        await page.goto(`${address}`, {
-          waitUntil: "networkidle2",
-        });
-
-        await page.locator(".remote-island").wait();
-        await page.locator(".increment").click();
-        await waitForText(page, ".result", "Count: 1");
+testDev("vite dev - remote island", async () => {
+  const fixture = path.join(FIXTURE_DIR, "remote_island");
+  await withViteDev(fixture, async (address) => {
+    await withBrowser(async (page) => {
+      await page.goto(`${address}`, {
+        waitUntil: "networkidle2",
       });
+
+      await page.locator(".remote-island").wait();
+      await page.locator(".increment").click();
+      await waitForText(page, ".result", "Count: 1");
     });
-  },
-  sanitizeResources: false,
-  sanitizeOps: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - error on 'node:process' import",
-  fn: async () => {
-    const fixture = path.join(FIXTURE_DIR, "node_builtin");
+testDev("vite dev - error on 'node:process' import", async () => {
+  const fixture = path.join(FIXTURE_DIR, "node_builtin");
+  await withViteDev(fixture, async (address) => {
+    let res = await fetch(`${address}`);
+    await res.body?.cancel();
 
-    await launchDevServer(fixture, async (address) => {
-      let res = await fetch(`${address}`);
-      await res.body?.cancel();
+    res = await fetch(`${address}/@id/fresh-island::NodeIsland`);
+    await res.body?.cancel();
 
-      res = await fetch(`${address}/@id/fresh-island::NodeIsland`);
-      await res.body?.cancel();
-
-      expect(res.status).toEqual(500);
-    });
-  },
-  sanitizeOps: false,
-  sanitizeResources: false,
+    expect(res.status).toEqual(500);
+  });
 });
 
-// issue: https://github.com/denoland/fresh/issues/3322
-Deno.test({
-  name: "vite dev - allow routes looking like static paths",
-  fn: async () => {
+testDev("vite dev - allow routes looking like static paths", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
     const res = await fetch(
-      `${demoServer.address()}/tests/api/@marvinh@infosec.exchange`,
+      `${address}/tests/api/@marvinh@infosec.exchange`,
     );
     const text = await res.text();
     expect(text).toEqual("ok");
-  },
-  sanitizeOps: false,
-  sanitizeResources: false,
+  });
 });
 
-// issue: https://github.com/denoland/fresh/issues/3323
-Deno.test({
-  name: "vite dev - npm:pg",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/tests/pg`);
+testDev("vite dev - npm:pg", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/tests/pg`);
     const text = await res.text();
     expect(text).toContain("<h1>pg</h1>");
-  },
-  sanitizeOps: false,
-  sanitizeResources: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - npm:ioredis",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/tests/ioredis`);
+testDev("vite dev - npm:ioredis", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/tests/ioredis`);
     const text = await res.text();
     expect(text).toContain("<h1>ioredis</h1>");
-  },
-  sanitizeOps: false,
-  sanitizeResources: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - radix",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/tests/radix`);
+testDev("vite dev - radix", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/tests/radix`);
     const text = await res.text();
     expect(text).toContain("click me</button>");
-  },
-  sanitizeOps: false,
-  sanitizeResources: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - static index.html",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/test_static/foo`);
+testDev("vite dev - static index.html", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/test_static/foo`);
     const text = await res.text();
     expect(text).toContain("<h1>ok</h1>");
-  },
-  sanitizeOps: false,
-  sanitizeResources: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - load .env files",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/tests/env_files`);
+testDev("vite dev - load .env files", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/tests/env_files`);
     const json = await res.json();
     expect(json).toEqual({
       MY_ENV: "MY_ENV test value",
@@ -453,18 +337,13 @@ Deno.test({
       MY_LOCAL_ENV: "MY_LOCAL_ENV test value",
       VITE_MY_LOCAL_ENV: "VITE_MY_LOCAL_ENV test value",
     });
-  },
-  sanitizeOps: false,
-  sanitizeResources: false,
+  });
 });
 
-Deno.test({
-  name: "vite dev - support _middleware Array",
-  fn: async () => {
-    const res = await fetch(`${demoServer.address()}/tests/middlewares`);
+testDev("vite dev - support _middleware Array", async () => {
+  await withViteDev(DEMO_DIR, async (address) => {
+    const res = await fetch(`${address}/tests/middlewares`);
     const text = await res.text();
     expect(text).toEqual("AB");
-  },
-  sanitizeOps: false,
-  sanitizeResources: false,
+  });
 });

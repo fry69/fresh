@@ -49,7 +49,6 @@ async function copyDir(from: string, to: string) {
 
 export async function prepareDevServer(fixtureDir: string) {
   const tmp = await withTmpDir({
-    dir: path.join(import.meta.dirname!, ".."),
     prefix: "tmp_vite_",
   });
 
@@ -136,7 +135,6 @@ export async function buildVite(
   options?: { base?: string },
 ) {
   const tmp = await withTmpDir({
-    dir: path.join(import.meta.dirname!, ".."),
     prefix: "tmp_vite_",
   });
 
