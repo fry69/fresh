@@ -4,10 +4,7 @@ import {
 } from "../packages/fresh/tests/test_utils.tsx";
 import { expect } from "@std/expect";
 import { retry } from "@std/async/retry";
-import {
-  buildVite,
-  launchProd,
-} from "../packages/plugin-vite/tests/test_utils.ts";
+import { buildVite, launchProd } from "../packages/plugin-vite/tests/utils.ts";
 
 let result: Awaited<ReturnType<typeof buildVite>>;
 
@@ -24,7 +21,7 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async () => {
-    await launchProd({ cwd: result.tmp }, async (address) => {
+    await launchProd({ cwd: result.outDir }, async (address: string) => {
       const resp = await fetch(`${address}/fresh-badge.svg`);
       await resp?.body?.cancel();
       expect(resp.headers.get("cross-origin-resource-policy")).toEqual(null);
@@ -40,10 +37,10 @@ Deno.test({
     await retry(async () => {
       await withChildProcessServer(
         {
-          cwd: result.tmp,
+          cwd: result.outDir,
           args: ["serve", "-A", "--port", "0", "_fresh/server.js"],
         },
-        async (address) => {
+        async (address: string) => {
           await withBrowser(async (page) => {
             await page.goto(`${address}/docs`);
             await page.waitForSelector("#version");

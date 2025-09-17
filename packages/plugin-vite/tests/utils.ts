@@ -6,17 +6,6 @@ import { withChildProcessServer } from "../../fresh/tests/test_utils.tsx";
 export const DEMO_DIR = path.join(import.meta.dirname!, "..", "demo");
 export const FIXTURE_DIR = path.join(import.meta.dirname!, "fixtures");
 
-async function withTmpDir(
-  fn: (dir: string) => Promise<void> | void,
-) {
-  const tmpDir = await Deno.makeTempDir();
-  try {
-    await fn(tmpDir);
-  } finally {
-    await Deno.remove(tmpDir, { recursive: true });
-  }
-}
-
 async function copyDir(from: string, to: string) {
   const entries = walk(from, {
     includeFiles: true,
@@ -62,12 +51,29 @@ export async function prepareDevServer(fixtureDir: string) {
 
   await copyDir(fixtureDir, tmpDir);
 
-  const pluginPath = path.fromFileUrl(new URL("../src/mod.ts", import.meta.url));
+  const dirname = import.meta.dirname;
+  if (dirname === undefined) {
+    throw new Error("Could not determine module directory.");
+  }
+  const root = path.resolve(dirname, "..", "..", "..");
+  const denoJsonPath = path.join(root, "deno.json");
+
+  const denoJson = JSON.parse(await Deno.readTextFile(denoJsonPath));
+  delete denoJson.workspaces;
+
+  await Deno.writeTextFile(
+    path.join(tmpDir, "deno.json"),
+    JSON.stringify(denoJson, null, 2),
+  );
+
+  const pluginPath = path.fromFileUrl(
+    new URL("../src/mod.ts", import.meta.url),
+  );
 
   await Deno.writeTextFile(
     path.join(tmpDir, "vite.config.ts"),
     `import { defineConfig } from "vite";
-import { fresh } from "${pluginPath}";
+import fresh from "${pluginPath}";
 
 export default defineConfig({
   plugins: [

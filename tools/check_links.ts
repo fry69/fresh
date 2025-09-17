@@ -1,7 +1,7 @@
 import { DOMParser } from "linkedom";
 import * as path from "@std/path";
 
-import { launchProd } from "../packages/plugin-vite/tests/test_utils.ts";
+import { launchProd } from "../packages/plugin-vite/tests/utils.ts";
 import { createBuilder } from "vite";
 
 const www = path.join(import.meta.dirname!, "..", "www");
@@ -16,7 +16,7 @@ interface CheckLink {
   referrer: URL | null;
 }
 
-await launchProd({ cwd: www }, async (address) => {
+await launchProd({ cwd: www }, async (address: string) => {
   const first = new URL(address);
 
   const stack: CheckLink[] = [{ referrer: null, url: first }];
