@@ -1,9 +1,34 @@
 import { launch, type Page } from "@astral/astral";
 import * as colors from "@std/fmt/colors";
 import { DOMParser, HTMLElement } from "linkedom";
-import { TextLineStream } from "@std/streams/text-line-stream";
+import { TextLineStream } from "@std/streams/text_line_stream";
 import * as path from "@std/path";
 import { mergeReadableStreams } from "@std/streams";
+import { walk, type WalkEntry } from "@std/fs/walk";
+
+// --- TYPE DECOUPLING ---
+export interface TestApp<State = unknown> {
+  handler: () => (
+    req: Request,
+    connInfo?: Deno.ServeHandlerInfo,
+  ) => Response | Promise<Response>;
+}
+
+export interface FsAdapter {
+    cwd(): string;
+    // deno-lint-ignore no-explicit-any
+    readFile(path: string): Promise<any>;
+    readTextFile(path: string): Promise<string>;
+    // deno-lint-ignore no-explicit-any
+    isDirectory(path: string): Promise<any>;
+    mkdirp(dir: string): Promise<void>;
+    walk(
+        dir: string,
+        // deno-lint-ignore no-explicit-any
+        options?: any,
+    ): AsyncIterableIterator<WalkEntry>;
+}
+
 
 // --- GENERIC HELPERS ---
 
@@ -35,7 +60,7 @@ export async function withTmpDir(fn: (dir: string) => Promise<void> | void) {
     } catch (err) {
       if (err instanceof Deno.errors.NotFound) return;
       if (Deno.build.os === "windows") {
-        console.warn(`Failed to clean up temp dir, ignoring: ${err.message}`);
+        console.warn(`Failed to clean up temp dir, ignoring: ${(err as Error).message}`);
         return;
       }
       throw err;
@@ -63,7 +88,7 @@ export async function withTmpDirDisposable(): Promise<
       } catch (err) {
         if (err instanceof Deno.errors.NotFound) return;
         if (Deno.build.os === "windows") {
-          console.warn(`Failed to clean up temp dir, ignoring: ${err.message}`);
+          console.warn(`Failed to clean up temp dir, ignoring: ${(err as Error).message}`);
           return;
         }
         throw err;
@@ -191,7 +216,7 @@ function _printDomNode(node: Node, indent: number): string {
   out += colors.dim(colors.cyan("<"));
   out += colors.cyan(node.localName);
 
-  for (const attr of node.attributes) {
+  for (const attr of (node as HTMLElement).attributes) {
     out += " " + colors.yellow(attr.name);
     out += colors.dim("=");
     out += colors.green(`"${attr.value}"`);
@@ -224,7 +249,7 @@ export interface TestDocument extends Document {
 }
 
 export function parseHtml(input: string): TestDocument {
-  const doc = new DOMParser().parseFromString(input, "text/html") as TestDocument;
+  const doc = new DOMParser().parseFromString(input, "text/html") as unknown as TestDocument;
   Object.defineProperty(doc, "debug", {
     value: () => console.log(prettyDom(doc)),
     enumerable: false,
@@ -244,6 +269,20 @@ export function assertNotSelector(doc: Document, selector: string) {
   }
 }
 
+export function assertMetaContent(doc: Document, nameOrProperty: string, expected: string) {
+    let el = doc.querySelector(`meta[name="${nameOrProperty}"]`) as HTMLMetaElement | null;
+    if (el === null) {
+        el = doc.querySelector(`meta[property="${nameOrProperty}"]`) as HTMLMetaElement | null;
+    }
+    if (el === null) {
+        throw new Error(`<meta>-tag with name or property "${nameOrProperty}" not found`);
+    }
+    if (el.content !== expected) {
+        throw new Error(`<meta>-tag "${nameOrProperty}" has content "${el.content}" but expected "${expected}"`);
+    }
+}
+
+
 export async function waitForText(page: Page, selector: string, text: string) {
   await page.waitForSelector(selector);
   try {
@@ -255,9 +294,10 @@ export async function waitForText(page: Page, selector: string, text: string) {
       { args: [selector, text] },
     );
   } catch (err) {
-    const el = await page.evaluateHandle((sel) => document.querySelector(sel), selector);
-    const content = await el.evaluate((el) => el?.textContent);
-    el.dispose();
+    const content = await page.evaluate((sel: string) => {
+        const el = document.querySelector(sel);
+        return el?.textContent ?? null;
+    }, selector);
     console.error(`Text "${text}" not found for selector "${selector}". Found "${content}" instead.`);
     throw err;
   }
@@ -292,3 +332,68 @@ export function usingEnv(name: string, value: string) {
     },
   };
 }
+
+export function getStdOutput(
+  out: Deno.CommandOutput,
+): { stdout: string; stderr: string } {
+  const decoder = new TextDecoder();
+  const stdout = colors.stripAnsiCode(decoder.decode(out.stdout));
+
+  const decoderErr = new TextDecoder();
+  const stderr = colors.stripAnsiCode(decoderErr.decode(out.stderr));
+
+  return { stdout, stderr };
+}
+
+export async function waitFor(
+  fn: () => Promise<unknown> | unknown,
+): Promise<void> {
+  let now = Date.now();
+  const limit = now + 2000;
+
+  while (now < limit) {
+    try {
+      if (await fn()) return;
+    } catch (err) {
+      if (now > limit) {
+        throw err;
+      }
+    } finally {
+      await new Promise((r) => setTimeout(r, 250));
+      now = Date.now();
+    }
+  }
+
+  throw new Error(`Timed out`);
+}
+
+export function createFakeFs(files: Record<string, unknown>): FsAdapter {
+  return {
+    cwd: () => ".",
+    async *walk(_root) {
+      for (const file of Object.keys(files)) {
+        const entry: WalkEntry = {
+          isDirectory: false,
+          isFile: true,
+          isSymlink: false,
+          name: file,
+          path: file,
+        };
+        yield entry;
+      }
+    },
+    // deno-lint-ignore require-await
+    async isDirectory(dir) {
+      return Object.keys(files).some((file) => file.startsWith(dir + "/"));
+    },
+    async mkdirp(_dir: string) {
+    },
+    readFile: Deno.readFile,
+    // deno-lint-ignore require-await
+    async readTextFile(path) {
+      return String(files[String(path)]);
+    },
+  };
+}
+
+export const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));

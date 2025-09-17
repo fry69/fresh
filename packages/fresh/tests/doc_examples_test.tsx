@@ -75,6 +75,7 @@ Deno.test("Docs Code example checks", async () => {
   // TODO: Enable after fixing docs check issues
   // expect(code).toBe(0);
   // expect(output).toBe("");
+  });
 });
 
 async function* docsMarkdownFiles() {

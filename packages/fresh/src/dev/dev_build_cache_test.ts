@@ -1,15 +1,14 @@
 import { expect } from "@std/expect";
 import { MemoryBuildCache } from "./dev_build_cache.ts";
 import { FileTransformer } from "./file_transformer.ts";
-import { createFakeFs, withTmpDir } from "../test_utils.ts";
+import { createFakeFs, withTmpDir } from "@internal/testing";
 import type { ResolvedBuildConfig } from "./builder.ts";
 
 Deno.test({
   name: "MemoryBuildCache - should error if reading outside of staticDir",
   fn: async () => {
-    await using _tmp = await withTmpDir();
-    const tmp = _tmp.dir;
-    const config: ResolvedBuildConfig = {
+    await withTmpDir(async (tmp) => {
+      const config: ResolvedBuildConfig = {
       serverEntry: "main.ts",
       root: tmp,
       mode: "development",
@@ -43,5 +42,6 @@ Deno.test({
     await expect(noThrown2).resolves.toBe(null);
     await expect(noThrown3).resolves.toBe(null);
     await expect(noThrown4).resolves.toBe(null);
+    });
   },
 });

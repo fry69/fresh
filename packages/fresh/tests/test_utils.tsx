@@ -8,10 +8,21 @@ import {
   type TestDocument,
   withChildProcessServer,
   browser,
+  waitFor,
+  assertMetaContent,
+  getStdOutput,
+  type ProdOptions,
+  launchProd,
+  withTmpDir,
+  withTmpDirDisposable,
+  createFakeFs,
+  writeFiles,
+  delay,
 } from "@internal/testing";
+import * as colors from "@std/fmt/colors";
 import type { Page } from "@astral/astral";
 import * as path from "@std/path";
-import type { App } from "../src/app.ts";
+import type { App as AppType } from "../src/app.ts";
 import { Builder, type BuildOptions } from "../src/dev/builder.ts";
 import type { ComponentChildren } from "preact";
 
@@ -23,10 +34,20 @@ export {
   type TestDocument,
   waitForText,
   withChildProcessServer,
+  waitFor,
+  assertMetaContent,
+  getStdOutput,
+  type ProdOptions,
+  launchProd,
+  withTmpDir,
+  withTmpDirDisposable,
+  createFakeFs,
+  writeFiles,
+  delay,
 };
 
-export async function withBrowserApp(
-  app: App,
+export async function withBrowserApp<T>(
+  app: AppType<T>,
   fn: (page: Page, address: string) => void | Promise<void>,
 ) {
   const aborter = new AbortController();
@@ -58,9 +79,9 @@ export const ISLAND_GROUP_DIR = path.join(
   "fixture_island_groups",
 );
 
-export async function buildProd(
+export async function buildProd<T>(
   options: Omit<BuildOptions, "outDir">,
-): Promise<<T>(app: App<T>) => void> {
+): Promise<(app: AppType<T>) => void> {
   const outDir = await Deno.makeTempDir();
   const builder = new Builder({ outDir, ...options });
   return await builder.build({ mode: "production", snapshot: "memory" });
@@ -83,7 +104,10 @@ export function Doc(props: { children?: ComponentChildren; title?: string }) {
   );
 }
 
-const STUB = {} as unknown as Deno.ServeHandlerInfo;
+const STUB = {
+    remoteAddr: { transport: "tcp", hostname: "localhost", port: 8000 },
+    completed: Promise.resolve(),
+} as const;
 
 export class FakeServer {
   constructor(

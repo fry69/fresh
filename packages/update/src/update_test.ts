@@ -657,87 +657,87 @@ export const handler: Handlers = {
 });
 
 Deno.test("update - 1.x remove reference comments", async () => {
-  await using _tmp = await withTmpDir();
-  const dir = _tmp.dir;
-  await writeFiles(dir, {
-    "/deno.json": `{}`,
-    "/routes/main.ts": `/// <reference no-default-lib="true" />
+  await withTmpDir(async (dir) => {
+    await writeFiles(dir, {
+      "/deno.json": `{}`,
+      "/routes/main.ts": `/// <reference no-default-lib="true" />
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
 /// <reference lib="dom.asynciterable" />
 /// <reference lib="deno.ns" />
 `,
+    });
+
+    await updateProject(dir);
+    const files = await readFiles(dir);
+
+    expect(files["/routes/main.ts"]).toEqual("");
   });
-
-  await updateProject(dir);
-  const files = await readFiles(dir);
-
-  expect(files["/routes/main.ts"]).toEqual("");
 });
 
 Deno.test("update - island files", async () => {
-  await using _tmp = await withTmpDir();
-  const dir = _tmp.dir;
-  await writeFiles(dir, {
-    "/deno.json": `{}`,
-    "/islands/foo.tsx": `import { IS_BROWSER } from "$fresh/runtime.ts";`,
+  await withTmpDir(async (dir) => {
+    await writeFiles(dir, {
+      "/deno.json": `{}`,
+      "/islands/foo.tsx": `import { IS_BROWSER } from "$fresh/runtime.ts";`,
+    });
+
+    await updateProject(dir);
+    const files = await readFiles(dir);
+
+    expect(files["/islands/foo.tsx"]).toEqual(
+      `import { IS_BROWSER } from "fresh/runtime";`,
+    );
   });
-
-  await updateProject(dir);
-  const files = await readFiles(dir);
-
-  expect(files["/islands/foo.tsx"]).toEqual(
-    `import { IS_BROWSER } from "fresh/runtime";`,
-  );
 });
 
 Deno.test("update - ignores node_modules and vendor in logs", async () => {
-  await using _tmp = await withTmpDir();
-  const dir = _tmp.dir;
-  await writeFiles(dir, {
-    "/deno.json": `{}`,
-    "/routes/index.tsx": `import { PageProps } from "$fresh/server.ts";
+  await withTmpDir(async (dir) => {
+    await writeFiles(dir, {
+      "/deno.json": `{}`,
+      "/routes/index.tsx": `import { PageProps } from "$fresh/server.ts";
 export default function Foo(props: PageProps) {
   return null;
 }`,
-    "/node_modules/foo/bar.ts":
-      `import { IS_BROWSER } from "$fresh/runtime.ts";`,
-    "/vendor/foo/bar.ts": `import { IS_BROWSER } from "$fresh/runtime.ts";`,
+      "/node_modules/foo/bar.ts":
+        `import { IS_BROWSER } from "$fresh/runtime.ts";`,
+      "/vendor/foo/bar.ts": `import { IS_BROWSER } from "$fresh/runtime.ts";`,
+    });
+
+    const consoleLogSpy = spy(console, "log");
+
+    try {
+      await updateProject(dir);
+    } finally {
+      consoleLogSpy.restore();
+    }
+
+    const files = await readFiles(dir);
+
+    expect(files["/node_modules/foo/bar.ts"]).toEqual(
+      `import { IS_BROWSER } from "fresh/runtime";`,
+    );
+    expect(files["/vendor/foo/bar.ts"]).toEqual(
+      `import { IS_BROWSER } from "fresh/runtime";`,
+    );
+    expect(files["/routes/index.tsx"]).toEqual(
+      `import { PageProps } from "fresh";
+export default function Foo(props: PageProps) {
+  return null;
+}`,
+    );
+
+    const fullLog = consoleLogSpy.calls.map((call: SpyCall) =>
+      call.args.join(" ")
+    ).join(
+      "\n",
+    );
+
+    expect(fullLog).toMatch(/Total files processed: 1/);
+    expect(fullLog).toMatch(/Successfully modified: 1/);
+    expect(fullLog).toMatch(/Unmodified \(no changes needed\): 0/);
+    expect(fullLog).not.toMatch(/node_modules/);
+    expect(fullLog).not.toMatch(/vendor/);
+    expect(fullLog).toMatch(/✓ routes\/index.tsx/);
   });
-
-  const consoleLogSpy = spy(console, "log");
-
-  try {
-    await updateProject(dir);
-  } finally {
-    consoleLogSpy.restore();
-  }
-
-  const files = await readFiles(dir);
-
-  expect(files["/node_modules/foo/bar.ts"]).toEqual(
-    `import { IS_BROWSER } from "fresh/runtime";`,
-  );
-  expect(files["/vendor/foo/bar.ts"]).toEqual(
-    `import { IS_BROWSER } from "fresh/runtime";`,
-  );
-  expect(files["/routes/index.tsx"]).toEqual(
-    `import { PageProps } from "fresh";
-export default function Foo(props: PageProps) {
-  return null;
-}`,
-  );
-
-  const fullLog = consoleLogSpy.calls.map((call: SpyCall) =>
-    call.args.join(" ")
-  ).join(
-    "\n",
-  );
-
-  expect(fullLog).toMatch(/Total files processed: 1/);
-  expect(fullLog).toMatch(/Successfully modified: 1/);
-  expect(fullLog).toMatch(/Unmodified \(no changes needed\): 0/);
-  expect(fullLog).not.toMatch(/node_modules/);
-  expect(fullLog).not.toMatch(/vendor/);
-  expect(fullLog).toMatch(/✓ routes\/index.tsx/);
 });

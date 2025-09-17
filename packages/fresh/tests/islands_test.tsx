@@ -15,11 +15,9 @@ import {
   buildProd,
   Doc,
   FakeServer,
-  ISLAND_GROUP_DIR,
   parseHtml,
   waitForText,
   withBrowserApp,
-  ALL_ISLAND_DIR,
 } from "./test_utils.tsx";
 import { expect } from "@std/expect";
 import * as path from "@std/path";

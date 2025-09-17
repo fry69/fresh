@@ -2,7 +2,7 @@ import { expect } from "@std/expect";
 import { Context } from "./context.ts";
 import { App } from "fresh";
 import { asset } from "fresh/runtime";
-import { FakeServer } from "./test_utils.ts";
+import { FakeServer } from "../tests/test_utils.tsx";
 import { BUILD_ID } from "@fresh/build-id";
 import { parseHtml } from "../tests/test_utils.tsx";
 

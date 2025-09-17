@@ -1,8 +1,22 @@
 import { runMiddlewares } from "./mod.ts";
 import { expect } from "@std/expect";
-import { serveMiddleware } from "../test_utils.ts";
+import { FakeServer } from "../../tests/test_utils.tsx";
 import type { Middleware } from "./mod.ts";
+import { App } from "../app.ts";
 import type { Lazy, MaybeLazy } from "../types.ts";
+import { Context } from "../context.ts";
+import type { ResolvedFreshConfig } from "../config.ts";
+import type { BuildCache } from "../build_cache.ts";
+
+const DEFAULT_CONFIG: ResolvedFreshConfig = {
+  root: "",
+  mode: "development",
+  basePath: "",
+};
+
+const STUB_BUILD_CACHE = {
+    getEntryAssets: () => [],
+} as unknown as BuildCache<unknown>;
 
 Deno.test("runMiddleware", async () => {
   const middlewares: Middleware<{ text: string }>[] = [
@@ -24,9 +38,19 @@ Deno.test("runMiddleware", async () => {
     },
   ];
 
-  const server = serveMiddleware<{ text: string }>((ctx) =>
-    runMiddlewares(middlewares, ctx)
-  );
+  const server = new FakeServer(async (req) => {
+    const ctx = new Context(
+        req,
+        new URL(req.url),
+        { remoteAddr: { transport: "tcp", hostname: "localhost", port: 8000 } },
+        null,
+        {},
+        DEFAULT_CONFIG,
+        () => Promise.resolve(new Response("")),
+        STUB_BUILD_CACHE,
+    );
+    return await runMiddlewares(middlewares, ctx);
+  });
 
   const res = await server.get("/");
   expect(await res.text()).toEqual("AB");
@@ -42,12 +66,22 @@ Deno.test("runMiddleware - middlewares should only be called once", async () => 
     return ctx.next();
   };
 
-  const server = serveMiddleware<{ count: number }>((ctx) =>
-    runMiddlewares(
+  const server = new FakeServer(async (req) => {
+    const ctx = new Context(
+        req,
+        new URL(req.url),
+        { remoteAddr: { transport: "tcp", hostname: "localhost", port: 8000 } },
+        null,
+        {},
+        DEFAULT_CONFIG,
+        () => Promise.resolve(new Response("")),
+        STUB_BUILD_CACHE,
+    );
+    return await runMiddlewares(
       [A, (ctx) => new Response(String(ctx.state.count))],
       ctx,
-    )
-  );
+    );
+  });
 
   const res = await server.get("/");
   expect(await res.text()).toEqual("0");
@@ -72,9 +106,19 @@ Deno.test("runMiddleware - runs multiple stacks", async () => {
     return ctx.next();
   };
 
-  const server = serveMiddleware<State>((ctx) => {
+  const server = new FakeServer(async (req) => {
+    const ctx = new Context<State>(
+        req,
+        new URL(req.url),
+        { remoteAddr: { transport: "tcp", hostname: "localhost", port: 8000 } },
+        null,
+        {},
+        DEFAULT_CONFIG,
+        () => Promise.resolve(new Response("")),
+        STUB_BUILD_CACHE as BuildCache<State>,
+    );
     ctx.state.text = "";
-    return runMiddlewares(
+    return await runMiddlewares(
       [
         A,
         B,
@@ -125,9 +169,19 @@ Deno.test("runMiddleware - throws errors", async () => {
     },
   ];
 
-  const server = serveMiddleware<{ text: string }>((ctx) =>
-    runMiddlewares(middlewares, ctx)
-  );
+  const server = new FakeServer(async (req) => {
+    const ctx = new Context(
+        req,
+        new URL(req.url),
+        { remoteAddr: { transport: "tcp", hostname: "localhost", port: 8000 } },
+        null,
+        {},
+        DEFAULT_CONFIG,
+        () => Promise.resolve(new Response("")),
+        STUB_BUILD_CACHE,
+    );
+    return await runMiddlewares(middlewares, ctx);
+  });
 
   try {
     await server.get("/");
@@ -164,9 +218,19 @@ Deno.test("runMiddleware - lazy middlewares", async () => {
     },
   ];
 
-  const server = serveMiddleware<{ text: string }>((ctx) =>
-    runMiddlewares(middlewares, ctx)
-  );
+  const server = new FakeServer(async (req) => {
+    const ctx = new Context<State>(
+        req,
+        new URL(req.url),
+        { remoteAddr: { transport: "tcp", hostname: "localhost", port: 8000 } },
+        null,
+        {},
+        DEFAULT_CONFIG,
+        () => Promise.resolve(new Response("")),
+        STUB_BUILD_CACHE as BuildCache<State>,
+    );
+    return await runMiddlewares(middlewares, ctx);
+  });
 
   let res = await server.get("/");
   expect(await res.text()).toEqual("A_lazy_B");

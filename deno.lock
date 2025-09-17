@@ -82,6 +82,7 @@
     "npm:feed@^5.1.0": "5.1.0",
     "npm:github-slugger@2": "2.0.0",
     "npm:ioredis@^5.7.0": "5.7.0",
+    "npm:linkedom@0.16.8": "0.16.8",
     "npm:linkedom@~0.18.10": "0.18.12",
     "npm:marked-mangle@^1.1.9": "1.1.11_marked@15.0.12",
     "npm:marked@^15.0.11": "15.0.12",
@@ -90,6 +91,7 @@
     "npm:postcss@8.5.6": "8.5.6",
     "npm:postcss@^8.5.6": "8.5.6",
     "npm:preact-render-to-string@^6.5.11": "6.6.1_preact@10.27.2",
+    "npm:preact@^10.19.2": "10.27.2",
     "npm:preact@^10.22.0": "10.27.2",
     "npm:preact@^10.26.9": "10.27.2",
     "npm:preact@^10.27.0": "10.27.2",
@@ -2293,6 +2295,15 @@
         "entities@6.0.1"
       ]
     },
+    "htmlparser2@9.1.0": {
+      "integrity": "sha512-5zfg6mHUoaer/97TxnGpxmbR7zJtPwIYFMZ/H5ucTlPZhKvtum05yiPK3Mgai3a0DyVxv7qYqoweaEd2nrYQzQ==",
+      "dependencies": [
+        "domelementtype",
+        "domhandler",
+        "domutils",
+        "entities@4.5.0"
+      ]
+    },
     "ioredis@5.7.0": {
       "integrity": "sha512-NUcA93i1lukyXU+riqEyPtSEkyFq8tX90uL659J+qpCZ3rEdViB/APC58oAhIh3+bJln2hzdlZbBZsGNrlsR8g==",
       "dependencies": [
@@ -2466,13 +2477,23 @@
     "lines-and-columns@1.2.4": {
       "integrity": "sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg=="
     },
+    "linkedom@0.16.8": {
+      "integrity": "sha512-+HtHVHBb3yZKlP9pgcJdi1AIG9tsAuo+Qtlz+79cCTsxgQwDzajsZjYvpp+DEckCK/zoGVhzkADniYZQ57KcFQ==",
+      "dependencies": [
+        "css-select",
+        "cssom",
+        "html-escaper",
+        "htmlparser2@9.1.0",
+        "uhyphen"
+      ]
+    },
     "linkedom@0.18.12": {
       "integrity": "sha512-jalJsOwIKuQJSeTvsgzPe9iJzyfVaEJiEXl+25EkKevsULHvMJzpNqwvj1jOESWdmgKDiXObyjOYwlUqG7wo1Q==",
       "dependencies": [
         "css-select",
         "cssom",
         "html-escaper",
-        "htmlparser2",
+        "htmlparser2@10.0.0",
         "uhyphen"
       ]
     },
@@ -3647,6 +3668,20 @@
         "dependencies": [
           "jsr:@std/fmt@^1.0.8",
           "npm:@types/node@^24.2.1"
+        ]
+      },
+      "packages/internal": {
+        "dependencies": [
+          "jsr:@astral/astral@~0.5.4",
+          "jsr:@std/assert@~0.220.1",
+          "jsr:@std/async@~0.220.1",
+          "jsr:@std/expect@~0.220.1",
+          "jsr:@std/fmt@~0.220.1",
+          "jsr:@std/fs@~0.220.1",
+          "jsr:@std/path@~0.220.1",
+          "jsr:@std/streams@~0.220.1",
+          "npm:linkedom@0.16.8",
+          "npm:preact@^10.19.2"
         ]
       },
       "packages/plugin-tailwindcss-v3": {
