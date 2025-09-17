@@ -2,7 +2,7 @@ import { createBuilder } from "vite";
 import * as path from "@std/path";
 import { walk } from "@std/fs/walk";
 import { withTmpDir } from "../../fresh/src/test_utils.ts";
-import { withChildProcessServer } from "../../test-utils/mod.ts";
+import { withChildProcessServer } from "../../fresh/tests/test_utils.tsx";
 
 export const DEMO_DIR = path.join(import.meta.dirname!, "..", "demo");
 export const FIXTURE_DIR = path.join(import.meta.dirname!, "fixtures");
@@ -26,7 +26,7 @@ async function copyDir(from: string, to: string) {
   const entries = walk(from, {
     includeFiles: true,
     includeDirs: false,
-    skip: [/([\\/]+(_fresh|node_modules|vendor)[\\/]+|[\\/]+vite.config.ts)/],
+    skip: [/([\\/]+(_fresh|node_modules|vendor)[\\/]+|[\\/]+vite\.config\.ts)/],
   });
 
   for await (const entry of entries) {
@@ -48,11 +48,8 @@ async function copyDir(from: string, to: string) {
 }
 
 export async function prepareDevServer(fixtureDir: string) {
-  const tmpDir = path.join(import.meta.dirname!, "..", "tmp");
-  await Deno.mkdir(tmpDir, { recursive: true });
-
   const tmp = await withTmpDir({
-    dir: tmpDir,
+    dir: path.join(import.meta.dirname!, ".."),
     prefix: "tmp_vite_",
   });
 

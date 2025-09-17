@@ -7,9 +7,9 @@ import {
   initProject,
 } from "./init.ts";
 import * as path from "@std/path";
-import { getStdOutput, withBrowser } from "../../fresh/tests/test_utils.ts";
-import { waitForText } from "../../fresh/tests/test_utils.ts";
-import { withChildProcessServer } from "../../test-utils/mod.ts";
+import { getStdOutput, withBrowser } from "../../fresh/tests/test_utils.tsx";
+import { waitForText } from "../../fresh/tests/test_utils.tsx";
+import { withChildProcessServer } from "../../fresh/tests/test_utils.tsx";
 import { withTmpDir as withTmpDirBase } from "../../fresh/src/test_utils.ts";
 import { stub } from "@std/testing/mock";
 
