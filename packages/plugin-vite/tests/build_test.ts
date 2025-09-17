@@ -10,16 +10,15 @@ import {
   FIXTURE_DIR,
   launchProd,
   usingEnv,
-} from "./test_utils.ts";
+} from "./utils.ts";
 import * as path from "@std/path";
-
-const viteResult = await buildVite(DEMO_DIR);
 
 Deno.test({
   name: "vite build - launches",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         const res = await fetch(address);
         const text = await res.text();
@@ -34,8 +33,9 @@ Deno.test({
 Deno.test({
   name: "vite build - creates compiled entry",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     const stat = await Deno.stat(
-      path.join(viteResult.tmp, "_fresh", "compiled-entry.js"),
+      path.join(viteResult.outDir, "_fresh", "compiled-entry.js"),
     );
 
     expect(stat.isFile).toEqual(true);
@@ -47,8 +47,9 @@ Deno.test({
 Deno.test({
   name: "vite build - serves static files",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         const res = await fetch(`${address}/test_static/foo.txt`);
         const text = await res.text();
@@ -63,8 +64,9 @@ Deno.test({
 Deno.test({
   name: "vite build - loads islands",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}/tests/island_hooks`, {
@@ -86,8 +88,9 @@ Deno.test({
 Deno.test({
   name: "vite build - nested islands",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}/tests/island_nested`, {
@@ -111,7 +114,7 @@ Deno.test({
     await using res = await buildVite(fixture);
 
     await launchProd(
-      { cwd: res.tmp },
+      { cwd: res.outDir },
       async (address) => {
         const res = await fetch(`${address}/ok`);
         const text = await res.text();
@@ -130,7 +133,7 @@ Deno.test({
     await using res = await buildVite(fixture);
 
     await launchProd(
-      { cwd: res.tmp },
+      { cwd: res.outDir },
       async (address) => {
         const res = await fetch(`${address}`);
         const text = await res.text();
@@ -149,7 +152,7 @@ Deno.test({
     await using res = await buildVite(fixture);
 
     await launchProd(
-      { cwd: res.tmp },
+      { cwd: res.outDir },
       async (address) => {
         const res = await fetch(`${address}`);
         const text = await res.text();
@@ -164,8 +167,9 @@ Deno.test({
 Deno.test({
   name: "vite build - load json inside npm package",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}/tests/mime`, {
@@ -184,8 +188,9 @@ Deno.test({
 Deno.test({
   name: "vite build - fetch static assets",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}/tests/assets`, {
@@ -216,7 +221,7 @@ Deno.test({
     await using res = await buildVite(fixture);
 
     await launchProd(
-      { cwd: res.tmp },
+      { cwd: res.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}`, {
@@ -246,7 +251,7 @@ Deno.test({
     await using res = await buildVite(fixture);
 
     await launchProd(
-      { cwd: res.tmp },
+      { cwd: res.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}`, {
@@ -272,8 +277,9 @@ Deno.test({
 Deno.test({
   name: "vite build - partial island",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}/tests/partial`, {
@@ -315,7 +321,7 @@ Deno.test({
       await using res = await buildVite(DEMO_DIR);
 
       await launchProd(
-        { cwd: res.tmp },
+        { cwd: res.outDir },
         async (address) => {
           const res = await fetch(`${address}/tests/build_id`);
           const text = await res.text();
@@ -336,8 +342,9 @@ Deno.test({
 Deno.test({
   name: "vite build - import json from jsr dependency",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         const res = await fetch(`${address}/tests/dep_json`);
         const json = await res.json();
@@ -352,8 +359,9 @@ Deno.test({
 Deno.test({
   name: "vite build - import node:*",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         const res = await fetch(`${address}/tests/feed`);
         await res.body?.cancel();
@@ -368,8 +376,9 @@ Deno.test({
 Deno.test({
   name: "vite build - css modules",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}/tests/css_modules`, {
@@ -411,8 +420,9 @@ Deno.test({
 Deno.test({
   name: "vite build - route css import",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}/tests/css`, {
@@ -442,7 +452,7 @@ Deno.test({
     await using res = await buildVite(fixture);
 
     await launchProd(
-      { cwd: res.tmp },
+      { cwd: res.outDir },
       async (address) => {
         await withBrowser(async (page) => {
           await page.goto(`${address}`, {
@@ -476,8 +486,9 @@ Deno.test({
 Deno.test({
   name: "vite build - static index.html",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         const res = await fetch(`${address}/test_static/foo`);
         const text = await res.text();
@@ -496,7 +507,7 @@ Deno.test({
 
     // Read the generated server.js to check asset paths
     const serverJs = await Deno.readTextFile(
-      path.join(res.tmp, "_fresh", "server.js"),
+      path.join(res.outDir, "_fresh", "server.js"),
     );
 
     // Asset paths should include the base path /my-app/
@@ -509,8 +520,9 @@ Deno.test({
 Deno.test({
   name: "vite build - env files",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         const res = await fetch(`${address}/tests/env_files`);
         const json = await res.json();
@@ -530,8 +542,9 @@ Deno.test({
 Deno.test({
   name: "vite build - support _middleware Array",
   fn: async () => {
+    await using viteResult = await buildVite(DEMO_DIR);
     await launchProd(
-      { cwd: viteResult.tmp },
+      { cwd: viteResult.outDir },
       async (address) => {
         const res = await fetch(`${address}/tests/middlewares`);
         const text = await res.text();
