@@ -5,67 +5,66 @@ import * as Marked from "marked";
 import { ensureDir, walk } from "@std/fs";
 import { dirname, join, relative } from "@std/path";
 // import { expect } from "@std/expect/expect";
-import { withTmpDir } from "../src/test_utils.ts";
+import { withTmpDir } from "@internal/testing";
 import { FRESH_VERSION, PREACT_VERSION } from "../../update/src/update.ts";
 
 Deno.test("Docs Code example checks", async () => {
-  await using tmp = await withTmpDir();
+  await withTmpDir(async (dir) => {
+    for await (const { path, code } of docsMarkdownFiles()) {
+      const codePath = join(dir, path);
+      await ensureDir(dirname(codePath));
+      await Deno.writeTextFile(codePath, code);
+    }
 
-  for await (const { path, code } of docsMarkdownFiles()) {
-    const codePath = join(tmp.dir, path);
-    await ensureDir(dirname(codePath));
-    await Deno.writeTextFile(codePath, code);
-  }
+    const denoJson = {
+      lock: false,
+      imports: {
+        fresh: `jsr:@fresh/core@${FRESH_VERSION}`,
+        "@fresh/plugin-tailwind-v3":
+          `jsr:@fresh/plugin-tailwind@^${twDenoJson.version}`,
+        "@fresh/plugin-tailwind":
+          `jsr:@fresh/plugin-tailwind@^${twDenoJson.version}`,
+        preact: `npm:preact@^${PREACT_VERSION}`,
+        "@deno/gfm": "jsr:@deno/gfm@^0.11.0",
+        "@std/expect": "jsr:@std/expect@^1.0.16",
+      },
+      compilerOptions: {
+        lib: ["dom", "dom.asynciterable", "deno.ns", "deno.unstable"],
+        jsx: "precompile",
+        jsxImportSource: "preact",
+        jsxPrecompileSkipElements: [
+          "a",
+          "img",
+          "source",
+          "body",
+          "html",
+          "head",
+          "title",
+          "meta",
+          "script",
+          "link",
+          "style",
+          "base",
+          "noscript",
+          "template",
+        ],
+      },
+    };
+    await Deno.writeTextFile(
+      join(dir, "deno.json"),
+      JSON.stringify(denoJson, undefined, 2),
+    );
 
-  const denoJson = {
-    lock: false,
-    imports: {
-      fresh: `jsr:@fresh/core@${FRESH_VERSION}`,
-      "@fresh/plugin-tailwind-v3":
-        `jsr:@fresh/plugin-tailwind@^${twDenoJson.version}`,
-      "@fresh/plugin-tailwind":
-        `jsr:@fresh/plugin-tailwind@^${twDenoJson.version}`,
-      preact: `npm:preact@^${PREACT_VERSION}`,
-      "@deno/gfm": "jsr:@deno/gfm@^0.11.0",
-      "@std/expect": "jsr:@std/expect@^1.0.16",
-    },
-    compilerOptions: {
-      lib: ["dom", "dom.asynciterable", "deno.ns", "deno.unstable"],
-      jsx: "precompile",
-      jsxImportSource: "preact",
-      jsxPrecompileSkipElements: [
-        "a",
-        "img",
-        "source",
-        "body",
-        "html",
-        "head",
-        "title",
-        "meta",
-        "script",
-        "link",
-        "style",
-        "base",
-        "noscript",
-        "template",
-      ],
-    },
-  };
-  await Deno.writeTextFile(
-    join(tmp.dir, "deno.json"),
-    JSON.stringify(denoJson, undefined, 2),
-  );
+    // Download and cache all dependencies (reduces `stdout` noise)
+    await new Deno.Command(Deno.execPath(), {
+      args: ["cache", "**/*"],
+      cwd: dir,
+    }).output();
 
-  // Download and cache all dependencies (reduces `stdout` noise)
-  await new Deno.Command(Deno.execPath(), {
-    args: ["cache", "**/*"],
-    cwd: tmp.dir,
-  }).output();
-
-  const { stdout, stderr } = await new Deno.Command(Deno.execPath(), {
-    args: ["check", "**/*"],
-    cwd: tmp.dir,
-  }).output();
+    const { stdout, stderr } = await new Deno.Command(Deno.execPath(), {
+      args: ["check", "**/*"],
+      cwd: dir,
+    }).output();
 
   const decoder = new TextDecoder();
   const output = `${decoder.decode(stdout)}\n${decoder.decode(stderr)}`;

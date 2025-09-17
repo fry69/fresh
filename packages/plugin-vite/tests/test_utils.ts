@@ -1,8 +1,7 @@
 import { createBuilder } from "vite";
 import * as path from "@std/path";
 import { walk } from "@std/fs/walk";
-import { withTmpDir } from "../../fresh/src/test_utils.ts";
-import { withChildProcessServer } from "../../fresh/tests/test_utils.tsx";
+import { withChildProcessServer, withTmpDir } from "@internal/testing";
 
 export const DEMO_DIR = path.join(import.meta.dirname!, "..", "demo");
 export const FIXTURE_DIR = path.join(import.meta.dirname!, "fixtures");
@@ -47,44 +46,6 @@ async function copyDir(from: string, to: string) {
   }
 }
 
-export async function prepareDevServer(fixtureDir: string) {
-  const tmp = await withTmpDir({
-    dir: path.join(import.meta.dirname!, ".."),
-    prefix: "tmp_vite_",
-  });
-
-  await copyDir(fixtureDir, tmp.dir);
-
-  await Deno.writeTextFile(
-    path.join(tmp.dir, "vite.config.ts"),
-    `import { defineConfig } from "vite";
-import { fresh } from "@fresh/plugin-vite";
-
-export default defineConfig({
-  plugins: [
-    fresh(),
-  ],
-});
-`,
-  );
-
-  return tmp;
-}
-
-export async function launchDevServer(
-  dir: string,
-  fn: (address: string, dir: string) => void | Promise<void>,
-  env: Record<string, string> = {},
-) {
-  await withChildProcessServer(
-    {
-      cwd: dir,
-      args: ["run", "-A", "--cached-only", "npm:vite", "--port", "0"],
-      env,
-    },
-    async (address) => await fn(address, dir),
-  );
-}
 
 export async function spawnDevServer(
   dir: string,
@@ -127,18 +88,31 @@ export async function withDevServer(
   fn: (address: string, dir: string) => void | Promise<void>,
   env: Record<string, string> = {},
 ) {
-  await using tmp = await prepareDevServer(fixtureDir);
-  await launchDevServer(tmp.dir, fn, env);
+  await withTmpDir(async (dir) => {
+    await copyDir(fixtureDir, dir);
+    await Deno.writeTextFile(
+      path.join(dir, "vite.config.ts"),
+      `import { defineConfig } from "vite";
+import { fresh } from "@fresh/plugin-vite";
+export default defineConfig({ plugins: [fresh()] });`,
+    );
+
+    await withChildProcessServer(
+      {
+        cwd: dir,
+        args: ["run", "-A", "--cached-only", "npm:vite", "--port", "0"],
+        env,
+      },
+      (address) => fn(address, dir),
+    );
+  });
 }
 
 export async function buildVite(
   fixtureDir: string,
   options?: { base?: string },
 ) {
-  const tmp = await withTmpDir({
-    dir: path.join(import.meta.dirname!, ".."),
-    prefix: "tmp_vite_",
-  });
+  const tmp = await withTmpDirDisposable();
 
   const builder = await createBuilder({
     logLevel: "error",

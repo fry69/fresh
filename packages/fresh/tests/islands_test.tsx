@@ -12,23 +12,31 @@ import { JsxChildrenIsland } from "./fixtures_islands/JsxChildrenIsland.tsx";
 import { NodeProcess } from "./fixtures_islands/NodeProcess.tsx";
 import { signal } from "@preact/signals";
 import {
-  ALL_ISLAND_DIR,
   buildProd,
   Doc,
+  FakeServer,
   ISLAND_GROUP_DIR,
+  parseHtml,
+  waitForText,
   withBrowserApp,
+  ALL_ISLAND_DIR,
 } from "./test_utils.tsx";
-import { parseHtml, waitForText } from "./test_utils.tsx";
 import { expect } from "@std/expect";
+import * as path from "@std/path";
 import { JsxConditional } from "./fixtures_islands/JsxConditional.tsx";
 import { FnIsland } from "./fixtures_islands/FnIsland.tsx";
 import { EscapeIsland } from "./fixtures_islands/EscapeIsland.tsx";
 import type { FreshConfig } from "../src/config.ts";
 import { FreshAttrs } from "./fixtures_islands/FreshAttrs.tsx";
-import { FakeServer } from "../src/test_utils.ts";
 import { PARTIAL_SEARCH_PARAM } from "../src/constants.ts";
 import { ComputedSignal } from "./fixtures_islands/Computed.tsx";
 import { EnvIsland } from "./fixtures_islands/EnvIsland.tsx";
+
+const ALL_ISLAND_DIR = path.join(import.meta.dirname!, "fixtures_islands");
+const ISLAND_GROUP_DIR = path.join(
+  import.meta.dirname!,
+  "fixture_island_groups",
+);
 
 Deno.env.set("FRESH_PUBLIC_TEST_FOO", "test-env-value");
 Deno.env.set("FRESH_PRIVATE_TEST_FOO", "i-should-not-be-visible");
