@@ -4,10 +4,10 @@ import {
   assertNotSelector,
   assertSelector,
   buildProd,
-  Doc,
   parseHtml,
   withBrowserApp,
-} from "./test_utils.tsx";
+} from "./test_utils.ts";
+import { Doc } from "./test_components.tsx";
 
 import { FakeServer } from "../src/test_utils.ts";
 import { Partial } from "fresh/runtime";

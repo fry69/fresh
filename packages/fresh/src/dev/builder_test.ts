@@ -5,10 +5,8 @@ import { App } from "../app.ts";
 import { DEV_ERROR_OVERLAY_URL } from "../constants.ts";
 import { BUILD_ID } from "@fresh/build-id";
 import { withTmpDir, writeFiles } from "../test_utils.ts";
-import {
-  getStdOutput,
-  withChildProcessServer,
-} from "../../tests/test_utils.tsx";
+import { getStdOutput } from "../../tests/test_utils.ts";
+import { withChildProcessServer } from "../../../test-utils/mod.ts";
 import { staticFiles } from "../middlewares/static_files.ts";
 
 Deno.test({

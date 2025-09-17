@@ -5,7 +5,7 @@ import {
   parseHtml,
   waitFor,
   withBrowserApp,
-} from "./test_utils.tsx";
+} from "./test_utils.ts";
 import { expect } from "@std/expect";
 import { FakeServer } from "../src/test_utils.ts";
 import * as path from "@std/path";

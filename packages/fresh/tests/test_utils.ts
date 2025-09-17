@@ -19,30 +19,6 @@ const browser = await launch({
   headless: Deno.env.get("HEADLESS") !== "false",
 });
 
-export const charset = <meta charset="utf-8" />;
-
-export const favicon = (
-  <link
-    href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII="
-    rel="icon"
-    type="image/x-icon"
-  />
-);
-
-export function Doc(props: { children?: ComponentChildren; title?: string }) {
-  return (
-    <html>
-      <head>
-        {charset}
-        <title>{props.title ?? "Test"}</title>
-        {favicon}
-      </head>
-      <body>
-        {props.children}
-      </body>
-    </html>
-  );
-}
 
 export const ALL_ISLAND_DIR = path.join(
   import.meta.dirname!,
@@ -102,75 +78,6 @@ export interface TestChildServerOptions {
   env?: Record<string, string>;
 }
 
-export async function withChildProcessServer(
-  options: TestChildServerOptions,
-  fn: (address: string) => void | Promise<void>,
-) {
-  const aborter = new AbortController();
-  const cp = await new Deno.Command(options.bin ?? Deno.execPath(), {
-    args: options.args,
-    stdin: "null",
-    stdout: "piped",
-    stderr: "piped",
-    cwd: options.cwd,
-    signal: aborter.signal,
-    env: options.env,
-  }).spawn();
-
-  const linesStdout: ReadableStream<string> = cp.stdout
-    .pipeThrough(new TextDecoderStream())
-    .pipeThrough(new TextLineStream());
-
-  const linesStderr: ReadableStream<string> = cp.stderr
-    .pipeThrough(new TextDecoderStream())
-    .pipeThrough(new TextLineStream());
-
-  const lines = mergeReadableStreams(linesStdout, linesStderr);
-
-  const output: string[] = [];
-  let address = "";
-  let found = false;
-  // @ts-ignore yes it does
-  for await (const raw of lines.values({ preventCancel: true })) {
-    const line = colors.stripAnsiCode(raw);
-    output.push(line);
-    const match = line.match(
-      /https?:\/\/[^:]+:\d+(\/\w+[-\w]*)*/g,
-    );
-    if (match) {
-      address = match[0];
-      found = true;
-      break;
-    }
-  }
-
-  if (!found) {
-    // deno-lint-ignore no-console
-    console.log(output);
-    throw new Error(`Could not find server address`);
-  }
-
-  let failed = false;
-  try {
-    await fn(address);
-  } catch (err) {
-    // deno-lint-ignore no-console
-    console.log(output);
-    failed = true;
-    throw err;
-  } finally {
-    aborter.abort();
-    await cp.status;
-    for await (const line of lines) {
-      output.push(line);
-    }
-
-    if (failed) {
-      // deno-lint-ignore no-console
-      console.log(output);
-    }
-  }
-}
 
 export const VOID_ELEMENTS =
   /^(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/;

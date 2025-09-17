@@ -14,11 +14,12 @@ import { signal } from "@preact/signals";
 import {
   ALL_ISLAND_DIR,
   buildProd,
-  Doc,
   ISLAND_GROUP_DIR,
   withBrowserApp,
-} from "./test_utils.tsx";
-import { parseHtml, waitForText } from "./test_utils.tsx";
+  parseHtml,
+  waitForText,
+} from "./test_utils.ts";
+import { Doc } from "./test_components.tsx";
 import { expect } from "@std/expect";
 import { JsxConditional } from "./fixtures_islands/JsxConditional.tsx";
 import { FnIsland } from "./fixtures_islands/FnIsland.tsx";

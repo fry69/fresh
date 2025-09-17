@@ -5,14 +5,12 @@ import {
   assertMetaContent,
   assertNotSelector,
   buildProd,
-  charset,
-  Doc,
-  favicon,
   parseHtml,
   waitFor,
   waitForText,
   withBrowserApp,
-} from "./test_utils.tsx";
+} from "./test_utils.ts";
+import { Doc, charset, favicon } from "./test_components.tsx";
 import { SelfCounter } from "./fixtures_islands/SelfCounter.tsx";
 import { expect } from "@std/expect";
 import { PartialInIsland } from "./fixtures_islands/PartialInIsland.tsx";

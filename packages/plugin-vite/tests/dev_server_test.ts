@@ -4,7 +4,7 @@ import {
   waitFor,
   waitForText,
   withBrowser,
-} from "../../fresh/tests/test_utils.tsx";
+} from "../../fresh/tests/test_utils.ts";
 import {
   DEMO_DIR,
   FIXTURE_DIR,
