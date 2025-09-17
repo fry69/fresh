@@ -3643,14 +3643,6 @@
           "jsr:@std/encoding@^1.0.10"
         ]
       },
-      "packages/examples/view-transitions-demo": {
-        "dependencies": [
-          "jsr:@fresh/core@2",
-          "npm:preact@^10.27.0",
-          "npm:tailwindcss@^4.1.10",
-          "npm:vite@^7.1.5"
-        ]
-      },
       "packages/fresh": {
         "dependencies": [
           "jsr:@std/fmt@^1.0.8",

@@ -2,8 +2,7 @@
   "nodeModulesDir": "auto",
   "workspace": [
     "./packages/*",
-    "./www",
-    "packages/examples/view-transitions-demo"
+    "./www"
   ],
   "tasks": {
     "demo": "deno task --cwd=packages/plugin-vite demo",
