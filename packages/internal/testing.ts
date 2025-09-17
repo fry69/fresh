@@ -72,6 +72,27 @@ export async function withTmpDirDisposable(): Promise<
   };
 }
 
+export interface ProdOptions {
+  cwd: string;
+  args?: string[];
+  bin?: string;
+  env?: Record<string, string>;
+}
+
+export async function launchProd(
+  options: ProdOptions,
+  fn: (address: string) => void | Promise<void>,
+) {
+  return await withChildProcessServer(
+    {
+      cwd: options.cwd,
+      args: options.args ??
+        ["serve", "-A", "--cached-only", "--port", "0", "_fresh/server.js"],
+    },
+    fn,
+  );
+}
+
 export async function withBrowser(fn: (page: Page) => void | Promise<void>) {
   await using page = await browser.newPage();
   try {

@@ -3,7 +3,7 @@ import {
   waitFor,
   waitForText,
   withBrowser,
-} from "../../fresh/tests/test_utils.tsx";
+} from "@internal/testing";
 import {
   buildVite,
   DEMO_DIR,

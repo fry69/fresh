@@ -1,7 +1,7 @@
 import { DOMParser } from "linkedom";
 import * as path from "@std/path";
 
-import { launchProd } from "../packages/plugin-vite/tests/test_utils.ts";
+import { launchProd } from "@internal/testing";
 import { createBuilder } from "vite";
 
 const www = path.join(import.meta.dirname!, "..", "www");
