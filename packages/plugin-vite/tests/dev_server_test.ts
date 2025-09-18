@@ -103,7 +103,7 @@ Deno.test({
 
 Deno.test({
   name: "vite dev - can apply HMR to islands (hooks)",
-  ignore: true, // Test is very flaky
+  ignore: false,
   fn: async () => {
     await withBrowser(async (page) => {
       await page.goto(`${demoServer.address()}/tests/island_hooks`, {

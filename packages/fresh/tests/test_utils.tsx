@@ -102,10 +102,7 @@ export interface TestChildServerOptions {
   env?: Record<string, string>;
 }
 
-export async function withChildProcessServer(
-  options: TestChildServerOptions,
-  fn: (address: string) => void | Promise<void>,
-) {
+export async function startServer(options: TestChildServerOptions) {
   const aborter = new AbortController();
   const cp = await new Deno.Command(options.bin ?? Deno.execPath(), {
     args: options.args,
@@ -145,31 +142,80 @@ export async function withChildProcessServer(
   }
 
   if (!found) {
+    aborter.abort();
+    await cp.status;
     // deno-lint-ignore no-console
     console.log(output);
     throw new Error(`Could not find server address`);
   }
 
-  let failed = false;
-  try {
-    await fn(address);
-  } catch (err) {
-    // deno-lint-ignore no-console
-    console.log(output);
-    failed = true;
-    throw err;
-  } finally {
-    aborter.abort();
-    await cp.status;
-    for await (const line of lines) {
-      output.push(line);
-    }
-
-    if (failed) {
-      // deno-lint-ignore no-console
-      console.log(output);
+  // Poll for server readiness
+  const startTime = Date.now();
+  const timeout = 30000; // 30 seconds
+  let ready = false;
+  while (Date.now() - startTime < timeout) {
+    try {
+      const url = new URL(address);
+      const conn = await Deno.connect({
+        hostname: url.hostname,
+        port: Number(url.port),
+      });
+      conn.close();
+      ready = true;
+      break;
+    } catch (err) {
+      if (err instanceof Deno.errors.ConnectionRefused) {
+        // Server not ready yet, wait and retry
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      } else {
+        // Another error occurred, throw it
+        aborter.abort();
+        await cp.status;
+        throw err;
+      }
     }
   }
+
+  if (!ready) {
+    aborter.abort();
+    await cp.status;
+    // deno-lint-ignore no-console
+    console.log(output);
+    throw new Error(`Server at ${address} did not become ready in time.`);
+  }
+
+  return {
+    address,
+    process: cp,
+    async close() {
+      aborter.abort();
+      await cp.status;
+    },
+    output,
+    lines,
+  };
+}
+
+export async function withServer(
+  options: TestChildServerOptions,
+  fn: (address: string) => Promise<void> | void,
+): Promise<void> {
+  const server = await startServer(options);
+  try {
+    await fn(server.address);
+  } finally {
+    await server.close();
+  }
+}
+
+/**
+ * @deprecated Use `withServer` instead.
+ */
+export async function withChildProcessServer(
+  options: TestChildServerOptions,
+  fn: (address: string) => void | Promise<void>,
+) {
+  await withServer(options, fn);
 }
 
 export const VOID_ELEMENTS =

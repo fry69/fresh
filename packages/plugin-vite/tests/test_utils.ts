@@ -2,7 +2,7 @@ import { createBuilder } from "vite";
 import * as path from "@std/path";
 import { walk } from "@std/fs/walk";
 import { withTmpDir } from "../../fresh/src/test_utils.ts";
-import { withChildProcessServer } from "../../fresh/tests/test_utils.tsx";
+import { withServer, startServer } from "../../fresh/tests/test_utils.tsx";
 
 export const DEMO_DIR = path.join(import.meta.dirname!, "..", "demo");
 export const FIXTURE_DIR = path.join(import.meta.dirname!, "fixtures");
@@ -76,13 +76,13 @@ export async function launchDevServer(
   fn: (address: string, dir: string) => void | Promise<void>,
   env: Record<string, string> = {},
 ) {
-  await withChildProcessServer(
+  await withServer(
     {
       cwd: dir,
       args: ["run", "-A", "--cached-only", "npm:vite", "--port", "0"],
       env,
     },
-    async (address) => await fn(address, dir),
+    (address) => fn(address, dir),
   );
 }
 
@@ -90,34 +90,17 @@ export async function spawnDevServer(
   dir: string,
   env: Record<string, string> = {},
 ) {
-  const boot = Promise.withResolvers<void>();
-  const p = Promise.withResolvers<void>();
-
-  let serverAddress = "";
-
-  const server = withChildProcessServer(
-    {
-      cwd: dir,
-      args: ["run", "-A", "--cached-only", "npm:vite", "--port", "0"],
-      env,
-    },
-    async (address) => {
-      serverAddress = address;
-      boot.resolve();
-      await p.promise;
-    },
-  );
-
-  await boot.promise;
+  const server = await startServer({
+    cwd: dir,
+    args: ["run", "-A", "--cached-only", "npm:vite", "--port", "0"],
+    env,
+  });
 
   return {
     dir,
-    promise: server,
-    address: () => {
-      return serverAddress;
-    },
+    address: () => server.address,
     async [Symbol.asyncDispose]() {
-      await p.resolve();
+      await server.close();
     },
   };
 }
@@ -195,7 +178,7 @@ export async function launchProd(
   options: ProdOptions,
   fn: (address: string) => void | Promise<void>,
 ) {
-  return await withChildProcessServer(
+  return await withServer(
     {
       cwd: options.cwd,
       args: options.args ??
