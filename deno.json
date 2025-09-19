@@ -4,6 +4,9 @@
     "./packages/*",
     "./www"
   ],
+  "imports": {
+    "@fresh/test-utils": "./packages/test-utils/src/mod.ts"
+  },
   "tasks": {
     "demo": "deno task --cwd=packages/plugin-vite demo",
     "demo:build": "deno task --cwd=packages/plugin-vite demo:build",

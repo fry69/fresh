@@ -1,16 +1,14 @@
 import { expect } from "@std/expect";
 import {
-  waitFor,
-  waitForText,
-  withBrowser,
-} from "../../fresh/tests/test_utils.tsx";
-import {
   buildVite,
   DEMO_DIR,
   FIXTURE_DIR,
   launchProd,
   usingEnv,
-} from "./test_utils.ts";
+  waitFor,
+  waitForText,
+  withBrowser,
+} from "@fresh/test-utils";
 import * as path from "@std/path";
 
 const viteResult = await buildVite(DEMO_DIR);

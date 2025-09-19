@@ -7,9 +7,8 @@ import {
   Doc,
   parseHtml,
   withBrowserApp,
-} from "./test_utils.tsx";
-
-import { FakeServer } from "../src/test_utils.ts";
+  FakeServer,
+} from "@fresh/test-utils";
 import { Partial } from "fresh/runtime";
 
 const allIslandCache = await buildProd({ islandDir: ALL_ISLAND_DIR });

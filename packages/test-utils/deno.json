@@ -1,0 +1,25 @@
+{
+  "name": "@fresh/test-utils",
+  "version": "0.1.0",
+  "exports": "./src/mod.ts",
+  "imports": {
+    "preact": "npm:preact@^10.27.0",
+    "preact/jsx-runtime": "npm:preact@^10.27.0/jsx-runtime",
+    "@std/fmt": "jsr:@std/fmt@^1.0.7",
+    "@std/expect": "jsr:@std/expect@^1.0.16",
+    "@std/streams": "jsr:@std/streams@1",
+    "@std/fs": "jsr:@std/fs@1",
+    "@std/path": "jsr:@std/path@1",
+    "@astral/astral": "jsr:@astral/astral@^0.5.3",
+    "linkedom": "npm:linkedom@^0.18.10",
+    "vite": "npm:vite@^7.1.5",
+    "fresh": "jsr:@fresh/core@^2.0.0",
+    "fresh/runtime": "jsr:@fresh/core@^2.0.0/runtime",
+    "@fresh/build-id": "jsr:@fresh/build-id@^1.0.0"
+  },
+  "compilerOptions": {
+    "lib": ["dom", "dom.asynciterable", "deno.ns", "deno.unstable"],
+    "jsx": "precompile",
+    "jsxImportSource": "preact"
+  }
+}

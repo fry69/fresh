@@ -5,9 +5,9 @@ import {
   parseHtml,
   waitFor,
   withBrowserApp,
-} from "./test_utils.tsx";
+  FakeServer,
+} from "@fresh/test-utils";
 import { expect } from "@std/expect";
-import { FakeServer } from "../src/test_utils.ts";
 import * as path from "@std/path";
 
 Deno.test("Head - ssr - updates title", async () => {

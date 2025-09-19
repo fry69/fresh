@@ -1,13 +1,11 @@
 import {
-  withBrowser,
-  withChildProcessServer,
-} from "../packages/fresh/tests/test_utils.tsx";
-import { expect } from "@std/expect";
-import { retry } from "@std/async/retry";
-import {
   buildVite,
   launchProd,
-} from "../packages/plugin-vite/tests/test_utils.ts";
+  withBrowser,
+  withChildProcessServer,
+} from "@fresh/test-utils";
+import { expect } from "@std/expect";
+import { retry } from "@std/async/retry";
 
 let result: Awaited<ReturnType<typeof buildVite>>;
 

@@ -1,8 +1,12 @@
 import { App, setBuildCache } from "./app.ts";
 import { type FreshFsMod, sortRoutePaths } from "./fs_routes.ts";
-import { delay, FakeServer, MockBuildCache } from "./test_utils.ts";
-import { createFakeFs } from "./test_utils.ts";
-import { expect, fn } from "@std/expect";
+import {
+  createFakeFs,
+  delay,
+  FakeServer,
+  MockBuildCache,
+  parseHtml,
+} from "@fresh/test-utils";
 import { stub } from "@std/testing/mock";
 import { type HandlerByMethod, type HandlerFn, page } from "./handlers.ts";
 import type { Method } from "./router.ts";

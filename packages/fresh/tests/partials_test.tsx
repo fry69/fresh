@@ -12,11 +12,11 @@ import {
   waitFor,
   waitForText,
   withBrowserApp,
-} from "./test_utils.tsx";
+  FakeServer,
+} from "@fresh/test-utils";
 import { SelfCounter } from "./fixtures_islands/SelfCounter.tsx";
 import { expect } from "@std/expect";
 import { PartialInIsland } from "./fixtures_islands/PartialInIsland.tsx";
-import { FakeServer } from "../src/test_utils.ts";
 import { JsonIsland } from "./fixtures_islands/JsonIsland.tsx";
 import { OptOutPartialLink } from "./fixtures_islands/OptOutPartialLink.tsx";
 import * as path from "@std/path";

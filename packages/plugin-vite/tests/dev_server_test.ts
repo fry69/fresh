@@ -1,19 +1,17 @@
 import * as path from "@std/path";
 import { expect } from "@std/expect";
 import {
-  waitFor,
-  waitForText,
-  withBrowser,
-} from "../../fresh/tests/test_utils.tsx";
-import {
   DEMO_DIR,
   FIXTURE_DIR,
   launchDevServer,
   prepareDevServer,
   spawnDevServer,
   updateFile,
+  waitFor,
+  waitForText,
+  withBrowser,
   withDevServer,
-} from "./test_utils.ts";
+} from "@fresh/test-utils";
 
 const tmp = await prepareDevServer(DEMO_DIR);
 const demoServer = await spawnDevServer(tmp.dir, {

@@ -17,15 +17,16 @@ import {
   Doc,
   ISLAND_GROUP_DIR,
   withBrowserApp,
-} from "./test_utils.tsx";
-import { parseHtml, waitForText } from "./test_utils.tsx";
+  parseHtml,
+  waitForText,
+  FakeServer,
+} from "@fresh/test-utils";
 import { expect } from "@std/expect";
 import { JsxConditional } from "./fixtures_islands/JsxConditional.tsx";
 import { FnIsland } from "./fixtures_islands/FnIsland.tsx";
 import { EscapeIsland } from "./fixtures_islands/EscapeIsland.tsx";
 import type { FreshConfig } from "../src/config.ts";
 import { FreshAttrs } from "./fixtures_islands/FreshAttrs.tsx";
-import { FakeServer } from "../src/test_utils.ts";
 import { PARTIAL_SEARCH_PARAM } from "../src/constants.ts";
 import { ComputedSignal } from "./fixtures_islands/Computed.tsx";
 import { EnvIsland } from "./fixtures_islands/EnvIsland.tsx";

@@ -1,13 +1,10 @@
-import type { App } from "../src/app.ts";
 import { launch, type Page } from "@astral/astral";
 import * as colors from "@std/fmt/colors";
 import { DOMParser, HTMLElement } from "linkedom";
-import { Builder, type BuildOptions } from "../src/dev/builder.ts";
 import { TextLineStream } from "@std/streams/text-line-stream";
-import * as path from "@std/path";
-import type { ComponentChildren } from "preact";
-import { expect } from "@std/expect";
 import { mergeReadableStreams } from "@std/streams";
+import { expect } from "@std/expect";
+import * as path from "@std/path";
 
 const browser = await launch({
   args: [
@@ -18,68 +15,6 @@ const browser = await launch({
   ],
   headless: Deno.env.get("HEADLESS") !== "false",
 });
-
-export const charset = <meta charset="utf-8" />;
-
-export const favicon = (
-  <link
-    href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQEAYAAABPYyMiAAAABmJLR0T///////8JWPfcAAAACXBIWXMAAABIAAAASABGyWs+AAAAF0lEQVRIx2NgGAWjYBSMglEwCkbBSAcACBAAAeaR9cIAAAAASUVORK5CYII="
-    rel="icon"
-    type="image/x-icon"
-  />
-);
-
-export function Doc(props: { children?: ComponentChildren; title?: string }) {
-  return (
-    <html>
-      <head>
-        {charset}
-        <title>{props.title ?? "Test"}</title>
-        {favicon}
-      </head>
-      <body>
-        {props.children}
-      </body>
-    </html>
-  );
-}
-
-export const ALL_ISLAND_DIR = path.join(
-  import.meta.dirname!,
-  "fixtures_islands",
-);
-export const ISLAND_GROUP_DIR = path.join(
-  import.meta.dirname!,
-  "fixture_island_groups",
-);
-
-export async function buildProd(
-  options: Omit<BuildOptions, "outDir">,
-): Promise<<T>(app: App<T>) => void> {
-  const outDir = await Deno.makeTempDir();
-  const builder = new Builder({ outDir, ...options });
-  return await builder.build({ mode: "production", snapshot: "memory" });
-}
-
-export async function withBrowserApp(
-  app: App<unknown>,
-  fn: (page: Page, address: string) => void | Promise<void>,
-) {
-  const aborter = new AbortController();
-  await using server = Deno.serve({
-    hostname: "localhost",
-    port: 0,
-    signal: aborter.signal,
-    onListen: () => {}, // Don't spam terminal with "Listening on..."
-  }, app.handler());
-
-  try {
-    await using page = await browser.newPage();
-    await fn(page, `http://localhost:${server.addr.port}`);
-  } finally {
-    aborter.abort();
-  }
-}
 
 export async function withBrowser(fn: (page: Page) => void | Promise<void>) {
   await using page = await browser.newPage();
@@ -354,11 +289,11 @@ export function getStdOutput(
   return { stdout, stderr };
 }
 
-const ISLAND_FIXTURE_DIR = path.join(import.meta.dirname!, "fixtures_islands");
-const allIslandBuilder = new Builder({});
-for await (const entry of Deno.readDirSync(ISLAND_FIXTURE_DIR)) {
-  if (entry.name.endsWith(".json")) continue;
-
-  const spec = path.join(ISLAND_FIXTURE_DIR, entry.name);
-  allIslandBuilder.registerIsland(spec);
-}
+export const ALL_ISLAND_DIR = path.join(
+  import.meta.dirname!,
+  "fixtures_islands",
+);
+export const ISLAND_GROUP_DIR = path.join(
+  import.meta.dirname!,
+  "fixture_island_groups",
+);

@@ -28,7 +28,7 @@ import {
   newNotFoundCmd,
   newRouteCmd,
 } from "./commands.ts";
-import { MockBuildCache } from "./test_utils.ts";
+import { MockBuildCache } from "@fresh/test-utils";
 
 // TODO: Completed type clashes in older Deno versions
 // deno-lint-ignore no-explicit-any
