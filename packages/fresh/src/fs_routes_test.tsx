@@ -10,7 +10,7 @@ import {
 import { stub } from "@std/testing/mock";
 import { type HandlerByMethod, type HandlerFn, page } from "./handlers.ts";
 import type { Method } from "./router.ts";
-import { parseHtml } from "../tests/test_utils.tsx";
+import { expect } from "@std/expect";
 import type { Context } from "./context.ts";
 import { HttpError } from "./error.ts";
 import { crawlRouteDir } from "./dev/fs_crawl.ts";
@@ -1474,7 +1474,7 @@ Deno.test("support bigint keys", async () => {
 
 Deno.test("fsRoutes - warn on _middleware with object handler", async () => {
   // deno-lint-ignore no-explicit-any
-  using warnSpy = stub(console, "warn", fn(() => {}) as any);
+  using warnSpy = stub(console, "warn", (() => {}) as any);
   const server = await createServer({
     "routes/_middleware.ts": { handler: { GET: () => new Response("ok") } },
     "routes/index.ts": { handler: () => new Response("ok") },
@@ -1491,7 +1491,7 @@ Deno.test("fsRoutes - warn on _middleware with object handler", async () => {
 
 Deno.test("fsRoutes - warn on _layout handler", async () => {
   // deno-lint-ignore no-explicit-any
-  using warnSpy = stub(console, "warn", fn(() => {}) as any);
+  using warnSpy = stub(console, "warn", (() => {}) as any);
   const server = await createServer({
     "routes/_layout.ts": {
       handler: () => new Response("ok"),

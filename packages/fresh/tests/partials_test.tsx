@@ -7,12 +7,12 @@ import {
   buildProd,
   charset,
   Doc,
+  FakeServer,
   favicon,
   parseHtml,
   waitFor,
   waitForText,
   withBrowserApp,
-  FakeServer,
 } from "@fresh/test-utils";
 import { SelfCounter } from "./fixtures_islands/SelfCounter.tsx";
 import { expect } from "@std/expect";

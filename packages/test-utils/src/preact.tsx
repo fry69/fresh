@@ -1,4 +1,4 @@
-import { type ComponentChildren } from "preact";
+import type { ComponentChildren } from "preact";
 import "preact/jsx-runtime";
 
 export const charset = <meta charset="utf-8" />;

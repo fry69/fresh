@@ -6,7 +6,7 @@ import { mergeReadableStreams } from "@std/streams";
 import { expect } from "@std/expect";
 import * as path from "@std/path";
 
-const browser = await launch({
+export const browser = await launch({
   args: [
     "--window-size=1280,720",
     ...((Deno.env.get("CI") && Deno.build.os === "linux")

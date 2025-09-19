@@ -15,11 +15,11 @@ import {
   ALL_ISLAND_DIR,
   buildProd,
   Doc,
+  FakeServer,
   ISLAND_GROUP_DIR,
-  withBrowserApp,
   parseHtml,
   waitForText,
-  FakeServer,
+  withBrowserApp,
 } from "@fresh/test-utils";
 import { expect } from "@std/expect";
 import { JsxConditional } from "./fixtures_islands/JsxConditional.tsx";

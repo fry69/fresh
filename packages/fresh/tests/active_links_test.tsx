@@ -5,9 +5,9 @@ import {
   assertSelector,
   buildProd,
   Doc,
+  FakeServer,
   parseHtml,
   withBrowserApp,
-  FakeServer,
 } from "@fresh/test-utils";
 import { Partial } from "fresh/runtime";
 

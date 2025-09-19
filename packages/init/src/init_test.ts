@@ -9,8 +9,8 @@ import {
 import * as path from "@std/path";
 import {
   getStdOutput,
-  withBrowser,
   waitForText,
+  withBrowser,
   withChildProcessServer,
   withTmpDir as withTmpDirBase,
 } from "@fresh/test-utils";

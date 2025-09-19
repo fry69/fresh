@@ -2,10 +2,10 @@ import { App, staticFiles } from "fresh";
 import { Head } from "fresh/runtime";
 import {
   buildProd,
+  FakeServer,
   parseHtml,
   waitFor,
   withBrowserApp,
-  FakeServer,
 } from "@fresh/test-utils";
 import { expect } from "@std/expect";
 import * as path from "@std/path";

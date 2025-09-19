@@ -1,6 +1,6 @@
 import * as path from "@std/path";
 import denoJson from "../../deno.json" with { type: "json" };
-import { getStdOutput } from "../../tests/test_utils.tsx";
+import { expect } from "@std/expect";
 import { getStdOutput, withTmpDir } from "@fresh/test-utils";
 import type { CheckFile } from "./update_check.ts";
 import { WEEK } from "../constants.ts";

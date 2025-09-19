@@ -1,16 +1,20 @@
 import { walk, type WalkEntry } from "@std/fs/walk";
 import * as path from "@std/path";
-import type { FsAdapter } from "fresh/src/fs.ts";
-import type { App } from "fresh/src/app.ts";
-import { type Page } from "@astral/astral";
-import { Builder, type BuildOptions } from "fresh/src/dev/builder.ts";
-import type { ResolvedFreshConfig } from "fresh/src/config.ts";
-import type { BuildCache, StaticFile } from "fresh/src/build_cache.ts";
-import { DEFAULT_CONN_INFO } from "fresh/src/app.ts";
-import { type Command, fsItemsToCommands, type FsRouteFile } from "fresh/src/fs_routes.ts";
-import { type ServerIslandRegistry, Context } from "fresh/src/context.ts";
+import type { FsAdapter } from "../../fresh/src/fs.ts";
+import type { App } from "../../fresh/src/app.ts";
+import type { Page } from "@astral/astral";
+import { Builder, type BuildOptions } from "../../fresh/src/dev/builder.ts";
+import type { ResolvedFreshConfig } from "../../fresh/src/config.ts";
+import type { BuildCache, StaticFile } from "../../fresh/src/build_cache.ts";
+import { DEFAULT_CONN_INFO } from "../../fresh/src/app.ts";
+import type { Command } from "../../fresh/src/commands.ts";
+import {
+  fsItemsToCommands,
+  type FsRouteFile,
+} from "../../fresh/src/fs_routes.ts";
+import { Context, type ServerIslandRegistry } from "../../fresh/src/context.ts";
 import { createBuilder } from "vite";
-import { withChildProcessServer, browser } from "./browser.ts";
+import { browser, withChildProcessServer } from "./browser.ts";
 
 const STUB = {} as unknown as Deno.ServeHandlerInfo;
 
@@ -278,7 +282,7 @@ export async function prepareDevServer(fixtureDir: string) {
   await Deno.writeTextFile(
     path.join(tmp.dir, "vite.config.ts"),
     `import { defineConfig } from "vite";
-import { fresh } from "@fresh/plugin-vite";
+import { fresh } from "@../../fresh/plugin-vite";
 
 export default defineConfig({
   plugins: [
@@ -419,7 +423,14 @@ export async function launchProd(
     {
       cwd: options.cwd,
       args: options.args ??
-        ["serve", "-A", "--cached-only", "--port", "0", "_fresh/server.js"],
+        [
+          "serve",
+          "-A",
+          "--cached-only",
+          "--port",
+          "0",
+          "_../../fresh/server.js",
+        ],
     },
     fn,
   );
