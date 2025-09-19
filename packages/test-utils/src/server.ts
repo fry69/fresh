@@ -100,7 +100,8 @@ export function createFakeFs(files: Record<string, unknown>): FsAdapter {
   };
 }
 
-export const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+export const delay = (ms: number): Promise<void> =>
+  new Promise((r) => setTimeout(r, ms));
 
 export async function withTmpDir(
   options?: Deno.MakeTempOptions,
@@ -228,13 +229,13 @@ export function serveMiddleware<T>(
   });
 }
 
-export const DEMO_DIR = path.join(import.meta.dirname!, "..", "demo");
-export const FIXTURE_DIR = path.join(import.meta.dirname!, "fixtures");
+export const DEMO_DIR: string = path.join(import.meta.dirname!, "..", "demo");
+export const FIXTURE_DIR: string = path.join(import.meta.dirname!, "fixtures");
 
 export async function updateFile(
   filePath: string,
   fn: (text: string) => string | Promise<string>,
-) {
+): Promise<{ [Symbol.asyncDispose]: () => Promise<void> }> {
   const original = await Deno.readTextFile(filePath);
   const result = await fn(original);
   await Deno.writeTextFile(filePath, result);
@@ -271,7 +272,9 @@ async function copyDir(from: string, to: string) {
   }
 }
 
-export async function prepareDevServer(fixtureDir: string) {
+export async function prepareDevServer(
+  fixtureDir: string,
+): Promise<{ dir: string } & AsyncDisposable> {
   const tmp = await withTmpDir({
     dir: path.join(import.meta.dirname!, ".."),
     prefix: "tmp_vite_",
@@ -313,7 +316,14 @@ export async function launchDevServer(
 export async function spawnDevServer(
   dir: string,
   env: Record<string, string> = {},
-) {
+): Promise<
+  {
+    dir: string;
+    promise: Promise<void>;
+    address: () => string;
+    [Symbol.asyncDispose]: () => Promise<void>;
+  }
+> {
   const boot = Promise.withResolvers<void>();
   const p = Promise.withResolvers<void>();
 
@@ -358,7 +368,7 @@ export async function withDevServer(
 export async function buildVite(
   fixtureDir: string,
   options?: { base?: string },
-) {
+): Promise<{ tmp: string; [Symbol.asyncDispose]: () => Promise<void> }> {
   const tmp = await withTmpDir({
     dir: path.join(import.meta.dirname!, ".."),
     prefix: "tmp_vite_",
@@ -394,7 +404,10 @@ export async function buildVite(
   };
 }
 
-export function usingEnv(name: string, value: string) {
+export function usingEnv(
+  name: string,
+  value: string,
+): { [Symbol.dispose]: () => void } {
   const prev = Deno.env.get(name);
   Deno.env.set(name, value);
   return {
@@ -418,7 +431,7 @@ export interface ProdOptions {
 export async function launchProd(
   options: ProdOptions,
   fn: (address: string) => void | Promise<void>,
-) {
+): Promise<void> {
   return await withChildProcessServer(
     {
       cwd: options.cwd,

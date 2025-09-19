@@ -6,7 +6,7 @@ import { mergeReadableStreams } from "@std/streams";
 import { expect } from "@std/expect";
 import * as path from "@std/path";
 
-export const browser = await launch({
+export const browser: Awaited<ReturnType<typeof launch>> = await launch({
   args: [
     "--window-size=1280,720",
     ...((Deno.env.get("CI") && Deno.build.os === "linux")
@@ -289,11 +289,11 @@ export function getStdOutput(
   return { stdout, stderr };
 }
 
-export const ALL_ISLAND_DIR = path.join(
+export const ALL_ISLAND_DIR: string = path.join(
   import.meta.dirname!,
   "fixtures_islands",
 );
-export const ISLAND_GROUP_DIR = path.join(
+export const ISLAND_GROUP_DIR: string = path.join(
   import.meta.dirname!,
   "fixture_island_groups",
 );
